@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Workbook Lageroptimierung – So werten wir unsere Daten aus</title>
+<style>
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: #1a1a2e; max-width: 860px; margin: 0 auto; padding: 40px 30px; line-height: 1.6; }
+  h1 { font-size: 26px; border-bottom: 3px solid #2c5f8a; padding-bottom: 8px; }
+  h2 { font-size: 20px; color: #2c5f8a; margin-top: 40px; border-bottom: 1px solid #d0dce8; padding-bottom: 4px; }
+  h3 { font-size: 15px; margin-top: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #b8c6d4; padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: #2c5f8a; color: #fff; }
+  tr:nth-child(even) td { background: #f2f6fa; }
+  .box { background: #eef4fa; border-left: 4px solid #2c5f8a; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .merke { background: #e9f6ec; border-left: 4px solid #3a9d5d; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .warn { background: #fdf3e7; border-left: 4px solid #d9822b; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .uebung { background: #f4effa; border-left: 4px solid #7a6fbd; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .formel { background: #f7f9fb; border: 1px solid #d5dee7; border-radius: 6px; padding: 10px 16px; margin: 12px 0; font-size: 15px; text-align: center; }
+  code { background: #eef1f4; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  .meta { color: #667; font-size: 13px; }
+  .small { font-size: 12.5px; color: #556; }
+  ol li, ul li { margin-bottom: 5px; }
+  details { margin: 8px 0; }
+  summary { cursor: pointer; font-weight: 600; color: #2c5f8a; }
+  @media print { body { padding: 0; } details[open] summary ~ * { display: block; } }
+</style>
+</head>
+<body>
+
+<h1>Workbook Lageroptimierung</h1>
+<p class="meta">So werten wir künftig unsere Daten aus – vom WinLine-Export bis zum Bestellvorschlag<br>
+Stölner GesmbH &nbsp;|&nbsp; Stand: 10.07.2026 &nbsp;|&nbsp; Zielgruppe: alle Mitarbeiter in Einkauf, Lager &amp; Vertrieb (keine Vorkenntnisse nötig)</p>
+
+<h2>1. Worum geht es überhaupt?</h2>
+<p>Unser Lager ist wie eine Badewanne: Oben fließt Ware hinein (unsere Bestellungen beim Lieferanten), unten fließt sie hinaus (Verkäufe an Händler und Endkunden). Bisher haben wir den Zulauf nach Bauchgefühl aufgedreht. Künftig stellen wir ihn nach Zahlen ein.</p>
+<p>Dabei balancieren wir zwei Ziele aus, die gegeneinander arbeiten:</p>
+<ul>
+<li><strong>Wenig Kapital binden:</strong> Jeder Artikel im Regal ist gebundenes Geld. Ein zu volles Lager kostet uns rund 20 % seines Werts – pro Jahr! (Zinsen, Platz, Versicherung, Veralterung)</li>
+<li><strong>Lieferfähig bleiben:</strong> Ist ein Artikel nicht lagernd, verlieren wir Umsatz, und der Händler bestellt womöglich beim Mitbewerb.</li>
+</ul>
+<div class="merke"><strong>Merksatz:</strong> Wir wollen nicht das vollste Lager, sondern das <em>richtigste</em>: von den wichtigen Artikeln genug, von den unwichtigen wenig.</div>
+
+<h2>2. Unsere Datenquellen im Überblick</h2>
+<p>Alle Rohdaten kommen aus der WinLine (Details siehe separate <em>WinLine-Exportanleitung</em>):</p>
+<table>
+<tr><th>Export</th><th>Inhalt</th><th>Wozu</th><th>Wie oft</th></tr>
+<tr><td><strong>A</strong> Verkaufsstatistik</td><td>Jede Verkaufszeile: Artikel, Kunde, Datum, Menge, Umsatz, DB</td><td>Nachfrage berechnen, Artikel klassifizieren</td><td>monatlich</td></tr>
+<tr><td><strong>B</strong> Artikelstammliste</td><td>Einkaufspreise, Lagerstand, Mindestbestellmenge (MOQ), Verpackungseinheit (VPE), Lieferzeit</td><td>Kosten und Bestellregeln</td><td>quartalsweise</td></tr>
+<tr><td><strong>C</strong> Einkaufsbelege</td><td>Bestellungen + Wareneingänge mit Datum</td><td>Echte Lieferzeit der Lieferanten messen</td><td>monatlich</td></tr>
+<tr><td><strong>D</strong> Rückstandsliste</td><td>Aktuell nicht lieferbare Auftragsmengen</td><td>Fehlmengen erkennen</td><td><strong>jeden Freitag</strong></td></tr>
+<tr><td><strong>E</strong> Artikeljournal</td><td>Alle Lagerbuchungen</td><td>Lagerstand rückwirkend prüfen</td><td>einmalig / bei Bedarf</td></tr>
+</table>
+
+<h2>3. Schritt 1: Daten putzen (Datenhygiene)</h2>
+<p>Bevor gerechnet wird, werden die Rohdaten bereinigt – sonst rechnen wir mit Müll:</p>
+<ol>
+<li><strong>Sonderbau raus:</strong> Kundenspezifische Artikel („Niro – Kundenname", „Studio – …") werden auftragsbezogen beschafft und nie auf Lager gelegt. Sie fliegen aus der Analyse.</li>
+<li><strong>Gutschriften beachten:</strong> Negative Mengen (Retouren, Storni) bleiben drin – sie werden mit den Verkäufen verrechnet.</li>
+<li><strong>Alte Leichen klären:</strong> Rückstände mit Lieferterminen, die viele Monate zurückliegen, sind meist nie gelieferte Altfälle. Vor der Auswertung klären oder ausschließen.</li>
+<li><strong>Ausprägungen zusammenfassen:</strong> Artikelvarianten (z. B. Suffixe wie „,P / ,W / ,S") je nach Bedeutung zusammenführen oder getrennt lassen – Regel dazu einmalig mit dem Einkauf festlegen und dokumentieren.</li>
+<li><strong>Auslaufartikel markieren:</strong> Gesperrte oder ausgelaufene Artikel bekommen keinen Bestellvorschlag.</li>
+</ol>
+
+<h2>4. Schritt 2: Die Nachfrage verstehen (μ und σ)</h2>
+<p>Für jeden Artikel bilden wir aus der Verkaufsstatistik die <strong>Monatsnachfrage</strong>: Wie viele Stück wurden pro Monat verkauft? Daraus berechnen wir zwei Kennzahlen:</p>
+<ul>
+<li><strong>μ (sprich: „mü") – der Durchschnitt:</strong> Wie viel geht in einem normalen Monat weg?</li>
+<li><strong>σ (sprich: „sigma") – die Streuung:</strong> Wie stark schwankt die Nachfrage um diesen Durchschnitt? Kleine σ = ruhiger, planbarer Artikel. Große σ = Zappelphilipp.</li>
+</ul>
+<h3>Beispiel zum Mitrechnen</h3>
+<p>Der „Gläserspüler Ocean 41" verkaufte sich in 6 Monaten so: <strong>10, 14, 8, 12, 17, 11 Stück</strong>.</p>
+<ul>
+<li>μ = (10+14+8+12+17+11) ÷ 6 = 72 ÷ 6 = <strong>12 Stück/Monat</strong></li>
+<li>σ: Abweichungen vom Durchschnitt: −2, +2, −4, 0, +5, −1 → quadrieren: 4, 4, 16, 0, 25, 1 → Durchschnitt: 50 ÷ 6 ≈ 8,3 → Wurzel: <strong>σ ≈ 2,9 Stück</strong></li>
+</ul>
+<div class="box"><strong>In Excel:</strong> μ = <code>=MITTELWERT(B2:B25)</code> &nbsp; σ = <code>=STABW.N(B2:B25)</code> &nbsp; (B2:B25 = die Monatsmengen des Artikels). Wichtig: Monate ohne Verkauf zählen als <strong>0</strong> mit – nicht weglassen!</div>
+<div class="warn"><strong>Achtung Fehlmengen:</strong> Verkäufe zeigen nur, was wir liefern <em>konnten</em>. War das Lager leer, war die echte Nachfrage höher. Deshalb gleichen wir die Verkaufszahlen mit der wöchentlichen Rückstandsliste ab und schlagen nicht gelieferte Mengen der Nachfrage zu.</div>
+
+<h2>5. Schritt 3: Artikel klassifizieren (ABC-XYZ)</h2>
+<p>Nicht jeder Artikel verdient dieselbe Aufmerksamkeit. Wir sortieren zweifach:</p>
+<h3>ABC – Wie wichtig ist der Artikel für den Umsatz?</h3>
+<ul>
+<li><strong>A</strong> = die Artikel, die zusammen die ersten <strong>80 %</strong> des Umsatzes bringen (das sind meist nur 10–20 % der Artikel!)</li>
+<li><strong>B</strong> = die nächsten <strong>15 %</strong> Umsatz</li>
+<li><strong>C</strong> = der Rest (viele Artikel, wenig Umsatz)</li>
+</ul>
+<h3>XYZ – Wie planbar ist die Nachfrage?</h3>
+<p>Dazu teilen wir die Streuung durch den Durchschnitt: <strong>CV = σ ÷ μ</strong> (Variationskoeffizient).</p>
+<ul>
+<li><strong>X</strong>: CV ≤ 0,5 → gleichmäßige Nachfrage, gut planbar</li>
+<li><strong>Y</strong>: CV ≤ 1,0 → schwankend (z. B. saisonal)</li>
+<li><strong>Z</strong>: CV &gt; 1,0 → sporadisch, kaum vorhersagbar</li>
+</ul>
+<p>Unser Beispiel: CV = 2,9 ÷ 12 = 0,24 → <strong>X-Artikel</strong>. Zusammen ergibt das die Klasse, z. B. „AX".</p>
+<table>
+<tr><th></th><th>X (planbar)</th><th>Y (schwankend)</th><th>Z (sporadisch)</th></tr>
+<tr><td><strong>A (umsatzstark)</strong></td><td>Ideal automatisierbar: Meldebestand + EOQ</td><td>Meldebestand mit größerem Puffer</td><td>Chefsache: einzeln entscheiden, evtl. auftragsbezogen</td></tr>
+<tr><td><strong>B</strong></td><td>Meldebestand + EOQ</td><td>Meldebestand + EOQ</td><td>kleiner Puffer oder auftragsbezogen</td></tr>
+<tr><td><strong>C (umsatzschwach)</strong></td><td>selten &amp; größer bestellen</td><td>Minimalbestand</td><td>kein Lager – nur auf Bestellung</td></tr>
+</table>
+<div class="box"><strong>Werkzeug:</strong> Die Datei <em>Lageroptimierung_Analyse_Tool.html</em> macht die komplette ABC-XYZ-Rechnung automatisch: im Browser öffnen, aktuellen Verkaufsstatistik-Export hineinziehen, Ergebnis als CSV herunterladen.</div>
+
+<h2>6. Schritt 4: Die Lieferzeit messen (Lead Time)</h2>
+<p>Aus den Einkaufsbelegen (Export C) berechnen wir je Bestellposition: <strong>Wareneingangsdatum minus Bestelldatum = Lieferzeit in Tagen</strong>. Daraus je Lieferant/Artikel:</p>
+<ul>
+<li><strong>μ<sub>L</sub></strong> = durchschnittliche Lieferzeit (z. B. 15 Tage = 0,5 Monate)</li>
+<li><strong>σ<sub>L</sub></strong> = wie stark die Lieferzeit schwankt (verlässlicher Lieferant = kleines σ<sub>L</sub>)</li>
+</ul>
+<div class="merke">Wir verwenden die <em>gemessene</em> Lieferzeit aus echten Bestellungen – nicht den Planwert aus dem Artikelstamm. Papier ist geduldig, Wareneingänge lügen nicht.</div>
+
+<h2>7. Schritt 5: Sicherheitsbestand und Meldebestand</h2>
+<p>Jetzt kommt der Kern. Zwei Fragen beantwortet dieser Schritt:</p>
+<ol>
+<li><strong>Wie viel Puffer</strong> brauchen wir gegen Nachfrage- und Lieferschwankungen? → Sicherheitsbestand</li>
+<li><strong>Bei welchem Lagerstand</strong> müssen wir nachbestellen? → Meldebestand</li>
+</ol>
+<h3>Der Servicelevel und der z-Faktor</h3>
+<p>Zuerst legt die Geschäftsführung je Klasse fest, wie oft der Artikel lieferbar sein soll. Aus dem Servicelevel folgt ein Faktor z (aus der Normalverteilung – einfach aus der Tabelle ablesen):</p>
+<table>
+<tr><th>Ziel-Servicelevel</th><td>90 %</td><td>95 %</td><td>98 %</td><td>99 %</td></tr>
+<tr><th>z-Faktor</th><td>1,28</td><td>1,65</td><td>2,05</td><td>2,33</td></tr>
+</table>
+<p>Unser Startvorschlag: <strong>A-Artikel 98 %, B-Artikel 95 %, C-Artikel 90 %</strong>.</p>
+<h3>Sicherheitsbestand (SB)</h3>
+<div class="formel">SB = z × σ<sub>D</sub> × √L</div>
+<p class="small">σ<sub>D</sub> = Streuung der Monatsnachfrage, L = Lieferzeit in Monaten. (Die erweiterte Formel berücksichtigt zusätzlich die Lieferzeitschwankung σ<sub>L</sub> – das ergänzen wir in Stufe 2, sobald Export C ausgewertet ist.)</p>
+<h3>Meldebestand (MB) – der Bestellauslöser</h3>
+<div class="formel">MB = μ<sub>D</sub> × L + SB</div>
+<p>Logik: Während wir auf die Lieferung warten (L), verkaufen wir im Schnitt μ<sub>D</sub> × L Stück. Der Sicherheitsbestand liegt als Airbag darunter.</p>
+<h3>Beispiel durchgerechnet (Gläserspüler, A-Artikel → 98 %, z = 2,05)</h3>
+<ul>
+<li>μ<sub>D</sub> = 12/Monat, σ<sub>D</sub> = 2,9, Lieferzeit L = 0,5 Monate (15 Tage)</li>
+<li>SB = 2,05 × 2,9 × √0,5 = 2,05 × 2,9 × 0,71 ≈ <strong>4,2 → 5 Stück</strong> (immer aufrunden)</li>
+<li>MB = 12 × 0,5 + 5 = <strong>11 Stück</strong></li>
+</ul>
+<div class="merke"><strong>Praxisregel:</strong> Fällt der verfügbare Bestand (Lagerstand + schon bestellte Ware − reservierte Ware) unter den Meldebestand → <strong>heute bestellen.</strong></div>
+
+<h2>8. Schritt 6: Wie viel bestellen? (EOQ)</h2>
+<p>Zu oft bestellen = viel Verwaltung und Fracht. Zu viel auf einmal = volles Lager. Die optimale Bestellmenge (EOQ) findet die Balance:</p>
+<div class="formel">EOQ = √( 2 × D × S ÷ H )</div>
+<ul>
+<li><strong>D</strong> = Jahresnachfrage in Stück (= μ<sub>D</sub> × 12)</li>
+<li><strong>S</strong> = Kosten pro Bestellvorgang (Arbeitszeit + Fracht; wird einmalig geschätzt, z. B. 50 €)</li>
+<li><strong>H</strong> = Lagerkosten pro Stück und Jahr = Einstandspreis × Lagerkostensatz (bei uns: <strong>20 %</strong>)</li>
+</ul>
+<h3>Beispiel weitergerechnet</h3>
+<ul>
+<li>D = 12 × 12 = 144 Stück/Jahr, S = 50 €, Einstandspreis C = 1.200 € → H = 1.200 × 0,20 = 240 €</li>
+<li>EOQ = √(2 × 144 × 50 ÷ 240) = √60 ≈ 7,7 → <strong>8 Stück pro Bestellung</strong></li>
+</ul>
+<p>Zum Schluss wird auf die Realität gerundet: mindestens die <strong>Mindestbestellmenge (MOQ)</strong> des Lieferanten, und auf volle <strong>Verpackungseinheiten (VPE)</strong> – beides steht im Artikelstamm (Export B: „Losgröße Einkauf" und „Colli Einkauf").</p>
+
+<h2>9. Schritt 7: Das Ergebnis – die Bestellvorschlagsliste</h2>
+<p>Alles zusammen ergibt pro Lagerartikel eine Zeile – unsere zentrale Arbeitstabelle:</p>
+<table>
+<tr><th>Spalte</th><th>Woher</th></tr>
+<tr><td>Artikelnummer, Bezeichnung, Klasse (z. B. AX)</td><td>Analyse-Tool</td></tr>
+<tr><td>μ<sub>D</sub>, σ<sub>D</sub> (Monatsnachfrage)</td><td>Analyse-Tool aus Export A</td></tr>
+<tr><td>Lieferzeit L, Verlässlichkeit σ<sub>L</sub></td><td>Export C</td></tr>
+<tr><td>Sicherheitsbestand, <strong>Meldebestand</strong></td><td>Formeln Schritt 5</td></tr>
+<tr><td><strong>Bestellmenge (EOQ, gerundet auf MOQ/VPE)</strong></td><td>Formel Schritt 6 + Export B</td></tr>
+<tr><td>Verfügbarer Bestand, Ampel (🔴 unter MB / 🟢 darüber)</td><td>Export B + Rückstandsliste</td></tr>
+</table>
+<p>Der wöchentliche Ablauf ist dann nur noch: Liste öffnen → rote Zeilen durchsehen → Bestellungen auslösen. Kein Bauchgefühl mehr nötig – aber gesunder Menschenverstand bleibt Pflicht (Aktionen, bekannte Großprojekte, Saisonstart übersteuern die Ampel).</p>
+
+<h2>10. Unser Auswertungs-Kalender</h2>
+<table>
+<tr><th>Wann</th><th>Was</th><th>Wer (bitte eintragen)</th></tr>
+<tr><td>Jeden <strong>Freitag</strong></td><td>Rückstandsliste als Excel exportieren und ablegen; rote Artikel der Bestellvorschlagsliste prüfen</td><td>________</td></tr>
+<tr><td>Monatsanfang</td><td>Verkaufsstatistik-Export aktualisieren, durchs Analyse-Tool ziehen, Kennzahlen aktualisieren</td><td>________</td></tr>
+<tr><td>Monatsanfang</td><td>Einkaufsbelege exportieren, Lieferzeiten nachführen</td><td>________</td></tr>
+<tr><td>Quartalsanfang</td><td>Artikelstammliste exportieren; MOQ/VPE/Preise prüfen; ABC-XYZ-Klassen neu berechnen</td><td>________</td></tr>
+<tr><td>1× jährlich</td><td>Lagerkostensatz, Bestellkosten und Servicelevel mit GF überprüfen</td><td>________</td></tr>
+</table>
+
+<h2>11. Übungsteil – zum Selberrechnen</h2>
+<div class="uebung"><strong>Übung 1 (μ und σ):</strong> Ein Wasserfilter verkaufte sich in 6 Monaten: 4, 7, 3, 6, 10, 6 Stück. Berechne μ und σ.
+<details><summary>Lösung anzeigen</summary>μ = 36 ÷ 6 = <strong>6</strong>. Abweichungen: −2, +1, −3, 0, +4, 0 → Quadrate: 4+1+9+0+16+0 = 30 → 30÷6 = 5 → σ = √5 ≈ <strong>2,2</strong>. CV = 2,2 ÷ 6 ≈ 0,37 → X-Artikel.</details></div>
+<div class="uebung"><strong>Übung 2 (Meldebestand):</strong> Gleicher Artikel, B-Artikel (95 % → z = 1,65), Lieferzeit 1 Monat. Berechne Sicherheits- und Meldebestand.
+<details><summary>Lösung anzeigen</summary>SB = 1,65 × 2,2 × √1 ≈ 3,6 → <strong>4 Stück</strong>. MB = 6 × 1 + 4 = <strong>10 Stück</strong>. Fällt der verfügbare Bestand unter 10, wird bestellt.</details></div>
+<div class="uebung"><strong>Übung 3 (Bestellmenge):</strong> Jahresnachfrage 72 Stück, Bestellkosten 40 €, Einstandspreis 500 €, Lagerkostensatz 20 %, VPE = 4 Stück. Wie viel bestellen wir pro Bestellung?
+<details><summary>Lösung anzeigen</summary>H = 500 × 0,20 = 100 €. EOQ = √(2 × 72 × 40 ÷ 100) = √57,6 ≈ 7,6. Auf VPE 4 gerundet: <strong>8 Stück</strong>.</details></div>
+
+<h2>12. Glossar</h2>
+<table>
+<tr><td><strong>μ (mü)</strong></td><td>Durchschnittliche Nachfrage pro Zeitraum</td></tr>
+<tr><td><strong>σ (sigma)</strong></td><td>Standardabweichung = typische Schwankung um den Durchschnitt</td></tr>
+<tr><td><strong>CV</strong></td><td>Variationskoeffizient = σ ÷ μ; misst Planbarkeit (Basis für XYZ)</td></tr>
+<tr><td><strong>Lead Time (L)</strong></td><td>Zeit von Bestellung beim Lieferanten bis Wareneingang</td></tr>
+<tr><td><strong>Servicelevel</strong></td><td>Ziel-Wahrscheinlichkeit, dass ein Artikel lieferbar ist (z. B. 98 %)</td></tr>
+<tr><td><strong>z-Faktor</strong></td><td>Umrechnungsfaktor vom Servicelevel in den Sicherheitspuffer</td></tr>
+<tr><td><strong>Sicherheitsbestand (SB)</strong></td><td>Puffer gegen Schwankungen von Nachfrage und Lieferzeit</td></tr>
+<tr><td><strong>Meldebestand (MB / ROP)</strong></td><td>Lagerstand, bei dem nachbestellt werden muss</td></tr>
+<tr><td><strong>EOQ</strong></td><td>Wirtschaftlich optimale Bestellmenge pro Bestellung</td></tr>
+<tr><td><strong>MOQ</strong></td><td>Mindestbestellmenge des Lieferanten („Losgröße Einkauf")</td></tr>
+<tr><td><strong>VPE / Colli</strong></td><td>Verpackungseinheit – wir bestellen nur volle Einheiten</td></tr>
+<tr><td><strong>DB</strong></td><td>Deckungsbeitrag = Umsatz minus Einstandskosten</td></tr>
+</table>
+
+<h2>13. Excel-Spickzettel</h2>
+<table>
+<tr><th>Aufgabe</th><th>Formel</th></tr>
+<tr><td>Durchschnitt μ</td><td><code>=MITTELWERT(Bereich)</code></td></tr>
+<tr><td>Streuung σ</td><td><code>=STABW.N(Bereich)</code></td></tr>
+<tr><td>Wurzel</td><td><code>=WURZEL(Zahl)</code></td></tr>
+<tr><td>Monatsmenge je Artikel aus Rohdaten</td><td><code>=SUMMEWENNS(Menge;Artikel;A2;Monat;B2)</code> oder PivotTabelle (Zeilen: Artikel, Spalten: Monat, Werte: Summe Menge)</td></tr>
+<tr><td>Meldebestand</td><td><code>=Mü*L + z*Sigma*WURZEL(L)</code></td></tr>
+<tr><td>EOQ</td><td><code>=WURZEL(2*D*S/H)</code></td></tr>
+<tr><td>Auf VPE aufrunden</td><td><code>=OBERGRENZE(EOQ;VPE)</code></td></tr>
+<tr><td>z-Faktor aus Servicelevel</td><td><code>=NORM.S.INV(0,98)</code> → 2,05</td></tr>
+</table>
+
+<p class="small">Nächste Ausbaustufe: fertige Excel-Rechenvorlage, in die nur noch die WinLine-Exporte eingefügt werden – die Formeln aus diesem Workbook sind dort bereits hinterlegt. Fragen zum Workbook: Günther Maurer.</p>
+
+</body>
+</html>

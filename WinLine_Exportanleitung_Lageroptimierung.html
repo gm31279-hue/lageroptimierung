@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>WinLine-Exportanleitung – Lageroptimierung</title>
+<style>
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color: #1a1a2e; max-width: 860px; margin: 0 auto; padding: 40px 30px; line-height: 1.55; }
+  h1 { font-size: 26px; border-bottom: 3px solid #2c5f8a; padding-bottom: 8px; }
+  h2 { font-size: 20px; color: #2c5f8a; margin-top: 38px; border-bottom: 1px solid #d0dce8; padding-bottom: 4px; }
+  h3 { font-size: 15px; margin-top: 22px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; }
+  th, td { border: 1px solid #b8c6d4; padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: #2c5f8a; color: #fff; }
+  tr:nth-child(even) td { background: #f2f6fa; }
+  .box { background: #eef4fa; border-left: 4px solid #2c5f8a; padding: 10px 14px; margin: 14px 0; font-size: 13.5px; }
+  .warn { background: #fdf3e7; border-left: 4px solid #d9822b; }
+  .done { background: #e9f6ec; border-left: 4px solid #3a9d5d; }
+  ol li, ul li { margin-bottom: 5px; }
+  code { background: #eef1f4; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  .meta { color: #667; font-size: 13px; }
+  .small { font-size: 12.5px; color: #556; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+
+<h1>WinLine-Exportanleitung für die Lageroptimierung</h1>
+<p class="meta">Erstellt: 10.07.2026 &nbsp;|&nbsp; Für: WinLine Classic (Desktop, mesonic) &nbsp;|&nbsp; Basis: Anforderungspapier „Lageroptimierung“ (Stölner)</p>
+
+<p>Diese Anleitung beschreibt Schritt für Schritt, welche Daten aus der WinLine exportiert werden müssen, um das stochastische Lageroptimierungsmodell (Nachfrageverteilung, Sicherheitsbestand, Meldebestand, EOQ) aufzubauen – und wie man an die Daten kommt, die <em>nicht</em> im ERP stehen.</p>
+
+<div class="box warn"><strong>Hinweis zu Menüpfaden:</strong> Die genauen Menübezeichnungen können je nach WinLine-Version/Build leicht abweichen. Die hier genannten Pfade entsprechen dem Standard von WinLine FAKT. Im Zweifel die Suchfunktion im WinLine-Hauptmenü nutzen (Begriff eingeben, z.&nbsp;B. „Rückstandsliste“).</div>
+
+<h2>0. Übersicht: Was brauchen wir woher?</h2>
+<table>
+<tr><th>#</th><th>Datenpunkt (lt. Anforderungspapier)</th><th>Quelle</th><th>Abschnitt</th><th>Status</th></tr>
+<tr><td>1</td><td>Verkaufshistorie</td><td>WinLine Verkaufsstatistik</td><td>Export A</td><td>✔ erledigt (VKST23-26.csv)</td></tr>
+<tr><td>2</td><td>Kanaltrennung (Händler/Endkunde)</td><td>Im VKST-Export enthalten (Spalte Kundentyp)</td><td>Export A</td><td>✔ erledigt</td></tr>
+<tr><td>3</td><td>Fehlmengen / Out-of-Stock</td><td>Rückstandsliste + Artikeljournal</td><td>Export D + E</td><td>offen</td></tr>
+<tr><td>4</td><td>Wiederbeschaffungszeit (Lead Time)</td><td>Einkaufsbelege (Bestellung vs. Wareneingang)</td><td>Export C</td><td>offen</td></tr>
+<tr><td>5</td><td>Lieferzeitschwankungen</td><td>wird aus Export C berechnet</td><td>Export C</td><td>offen</td></tr>
+<tr><td>6</td><td>Bestellrestriktionen (MOQ, VPE)</td><td>Artikelstamm, Register „Lieferanten“</td><td>Export B</td><td>offen</td></tr>
+<tr><td>7</td><td>Einstandspreise</td><td>Artikelstamm (gleitender / letzter EP)</td><td>Export B</td><td>offen</td></tr>
+<tr><td>8+11</td><td>Lagerhaltungskostensatz</td><td>Nicht in WinLine – FIBU-Kennzahl / Annahme</td><td>Abschnitt 6</td><td>Entscheidung</td></tr>
+<tr><td>9</td><td>Bestellkosten</td><td>Nicht in WinLine – einmalige Schätzung</td><td>Abschnitt 6</td><td>Entscheidung</td></tr>
+<tr><td>10</td><td>Ziel-Lieferbereitschaftsgrad</td><td>Management-Vorgabe je ABC-Klasse</td><td>Abschnitt 6</td><td>Entscheidung</td></tr>
+<tr><td>12</td><td>Lagerhaltungskosten pro Stück (H)</td><td>wird berechnet: H = EP × Kostensatz</td><td>–</td><td>automatisch</td></tr>
+</table>
+
+<h2>1. Allgemeine Export-Grundlagen in WinLine Classic</h2>
+<ul>
+<li><strong>Ausgabeziel:</strong> In fast jedem Auswertungsfenster kann die Ausgabe statt auf „Bildschirm/Drucker“ auf <strong>Tabelle</strong> gestellt werden – damit landet das Ergebnis direkt in Excel bzw. als XLSX/CSV-Datei.</li>
+<li><strong>Bildschirmausgaben:</strong> Bei Bildschirmausgaben kann über das Excel-Symbol in der Symbolleiste (bzw. Menü <em>Datei → Export</em>) nach Excel exportiert werden.</li>
+<li><strong>Tabellen/Grids:</strong> Tabellendarstellungen lassen sich per <strong>Rechtsklick → Export</strong> nach Excel übergeben.</li>
+<li><strong>Zeitraum:</strong> Für alle historischen Auswertungen einheitlich <strong>01.01.2023 bis heute</strong> wählen (deckt die geforderten 24–36 Monate ab).</li>
+<li><strong>Format:</strong> Immer mit Spaltenüberschriften exportieren, eine Zeile = ein Datensatz, keine Zwischensummen/Gruppierungszeilen. XLSX oder CSV ist beides in Ordnung.</li>
+<li><strong>Namenskonvention:</strong> <code>THEMA_JJJJMMTT.xlsx</code>, z.&nbsp;B. <code>ARTSTAMM_20260710.xlsx</code>.</li>
+</ul>
+
+<h2>2. Export A – Verkaufsstatistik <span class="small">(bereits erledigt)</span></h2>
+<div class="box done"><strong>Status: ✔ liegt vor</strong> als <code>VKST23-26.csv</code> (22.598 Belegzeilen, 2023–2026) mit Artikel, Kunde, Warengruppen-Hierarchie, Vertreter, Kundentyp (= Kanaltrennung), Belegdatum, Menge, Umsatz und Deckungsbeitrag.</div>
+<p>Für spätere Aktualisierungen: dieselbe Statistik-Auswertung mit identischer Spaltenauswahl verwenden und die Einstellungen in WinLine als Vorlage speichern, damit die Spaltenstruktur stabil bleibt. Empfehlung: <strong>monatlich</strong> neu exportieren (jeweils nur das letzte abgeschlossene Monat anhängen).</p>
+
+<h2>3. Export B – Artikelstammliste (Einstandspreise, MOQ, VPE, Lieferzeit)</h2>
+<p><strong>Ziel:</strong> Eine Zeile pro Artikel (ggf. pro Artikel-Lieferanten-Kombination) mit Preisen und Bestellrestriktionen.</p>
+<h3>Weg 1 (empfohlen): List-Assistent / Listgenerator</h3>
+<ol>
+<li>WinLine LIST öffnen bzw. in FAKT den Menüpunkt <em>Listgenerator / List-Assistent</em> aufrufen.</li>
+<li><strong>Neue Liste</strong> anlegen, als Datenbasis den <strong>Artikelstamm</strong> wählen (inkl. Bereich Artikel-Lieferant).</li>
+<li>Folgende Variablen (Spalten) auswählen:
+<ul>
+<li>Artikelnummer, Artikelbezeichnung</li>
+<li>Artikelgruppe / Warengruppe</li>
+<li><strong>Gleitender Einstandspreis</strong> und <strong>letzter Einstandspreis</strong></li>
+<li>Aktueller <strong>Lagerstand</strong>, Mindestbestand (falls gepflegt)</li>
+<li>Hauptlieferant (Nummer + Name)</li>
+<li><strong>Lieferzeit</strong> (Tage) aus der Lieferantenzuordnung</li>
+<li><strong>Mindestbestellmenge (MOQ)</strong></li>
+<li><strong>Verpackungseinheit</strong> + Menge je Verpackungseinheit</li>
+<li>Statistik-/Sperrkennzeichen (um ausgelaufene Artikel auszufiltern)</li>
+</ul></li>
+<li>Ausgabe auf <strong>Tabelle</strong> stellen und ausführen.</li>
+<li>Als <code>ARTSTAMM_JJJJMMTT.xlsx</code> speichern. Die Liste für Wiederverwendung abspeichern.</li>
+</ol>
+<h3>Weg 2 (Alternative): EXIM / Datenexport</h3>
+<p>Falls das Modul <em>WinLine EXIM</em> (Export/Import) lizenziert ist, kann der Artikelstamm inkl. Lieferantenzuordnung auch über eine Exportvorlage (XLS/ASCII) ausgegeben werden – sinnvoll, wenn der Export regelmäßig automatisch laufen soll.</p>
+<div class="box warn"><strong>Wichtig – Datenqualität prüfen:</strong> Die Felder Lieferzeit, Mindestbestellmenge und Verpackungseinheit stehen im Artikelstamm im Register <strong>„Lieferanten“</strong> – sie sind aber nur so gut wie ihre Pflege. Vor dem Massenexport bei 10–15 wichtigen Artikeln stichprobenartig prüfen, ob die Felder befüllt sind. Wenn großteils leer: Lead Time stattdessen aus Export C berechnen (ist ohnehin genauer) und MOQ/VPE nur für die A-Artikel nachpflegen.</div>
+
+<h2>4. Export C – Einkaufsbelege (Lead Time μ<sub>L</sub> und Schwankung σ<sub>L</sub>)</h2>
+<p><strong>Ziel:</strong> Je Bestellposition das Bestelldatum und das tatsächliche Wareneingangsdatum, um die reale Wiederbeschaffungszeit inkl. Streuung zu berechnen – nicht den Planwert aus dem Stamm.</p>
+<ol>
+<li>WinLine FAKT → <em>Auswertungen</em> → <em>Beleganalyse</em> → <strong>Belegjournal</strong> (Einkaufsseite).</li>
+<li>Belegstufen auswählen: <strong>Bestellung</strong> und <strong>Wareneingang</strong> (bzw. Eingangsrechnung, falls Wareneingänge nicht separat gebucht werden).</li>
+<li>Zeitraum: 01.01.2023 bis heute.</li>
+<li>Benötigte Spalten: Belegnummer, Belegstufe, <strong>Belegdatum</strong>, Lieferantennummer + Name, Artikelnummer, Menge, ggf. bestätigter Liefertermin.</li>
+<li>Ausgabe als Tabelle → <code>EK_BELEGE_JJJJMMTT.xlsx</code>.</li>
+</ol>
+<div class="box">Die Auswertung (Zuordnung Bestellung → Wareneingang über die Belegnummernkette, Berechnung von μ<sub>L</sub> und σ<sub>L</sub> je Lieferant und je Artikel) übernehme ich – es reicht der Rohexport beider Belegstufen.</div>
+
+<h2>5. Export D + E – Fehlmengen / Out-of-Stock</h2>
+<p>WinLine protokolliert „Lager war leer“ nicht direkt als Historie. Zwei sich ergänzende Wege:</p>
+<h3>Export D: Rückstandsliste (ab sofort regelmäßig)</h3>
+<ol>
+<li>WinLine FAKT → <em>Auswertungen</em> → <em>Beleganalyse</em> → <strong>Rückstandsliste</strong>.</li>
+<li>Keine Einschränkung bei Kunden/Artikeln (alles auswerten); bei Bedarf über „Filter bearbeiten“ eingrenzen.</li>
+<li>Export als Tabelle → <code>RUECKSTAND_JJJJMMTT.xlsx</code>.</li>
+</ol>
+<div class="box warn"><strong>Achtung:</strong> Die Rückstandsliste ist eine <em>Momentaufnahme</em> (aktuell offene, nicht lieferbare Auftragsmengen). Sie ersetzt keine Historie. Deshalb: <strong>ab sofort jeden Freitag exportieren</strong> und ablegen – nach 8–12 Wochen entsteht eine brauchbare Fehlmengen-Zeitreihe. Diesen Export ggf. als wiederkehrende Aufgabe einplanen.</div>
+<h3>Export E: Artikeljournal / Lagerjournal (Historie rückrechnen)</h3>
+<ol>
+<li>WinLine FAKT → <em>Auswertungen</em> → <strong>Artikeljournal</strong> (Lagerbuchungen).</li>
+<li>Zeitraum 01.01.2023 bis heute; alle Buchungsarten (Zugang, Abgang, Umbuchung, Inventur).</li>
+<li>Spalten: Artikelnummer, Datum, Buchungsart, Menge, Lagerort (falls mehrere Läger).</li>
+<li>Export als Tabelle → <code>LAGERJOURNAL_2023-26.xlsx</code>. Bei sehr großen Datenmengen jahresweise exportieren.</li>
+</ol>
+<div class="box">Aus dem Journal lässt sich der Lagerstand je Artikel und Tag rückwärts rekonstruieren. Tage mit Lagerstand 0 bei gleichzeitig vorhandener Nachfrage = Out-of-Stock-Zeiten. Damit korrigieren wir die Verkaufshistorie um „unsichtbare“ Nachfrage (Punkt 3 des Anforderungspapiers).</div>
+
+<h2>6. Daten, die nicht aus der WinLine kommen (Arbeitsblatt)</h2>
+<table>
+<tr><th>Parameter</th><th>Vorgehen</th><th>Startempfehlung</th></tr>
+<tr><td><strong>Lagerhaltungskostensatz i</strong></td><td>Vier Blöcke lt. Anforderungspapier grob befüllen: Kapitalbindung (5–10&nbsp;%), Lagerraum (3–8&nbsp;%), Risiko/Schwund (2–6&nbsp;%), Versicherung/Verwaltung (1–3&nbsp;%). Zahlen aus FIBU-Konten (Miete, Zinsen, Versicherung) ableiten oder schätzen.</td><td><strong>18–20&nbsp;%</strong> für den Start</td></tr>
+<tr><td><strong>Bestellkosten S</strong></td><td>Einmalig schätzen: Ø Minuten pro Bestellung (anlegen, freigeben, Wareneingang buchen, Rechnung prüfen) × interner Stundensatz + Ø Frachtkosten je Bestellung.</td><td>häufig 20–80&nbsp;€ pro Bestellung</td></tr>
+<tr><td><strong>Ziel-Servicelevel</strong></td><td>Je ABC-Klasse festlegen (Management-Entscheidung).</td><td>A: 98&nbsp;% · B: 95&nbsp;% · C: 90&nbsp;%</td></tr>
+<tr><td><strong>H (Lagerkosten/Stück)</strong></td><td>Wird berechnet: H = Einstandspreis × i.</td><td>automatisch</td></tr>
+</table>
+
+<h2>7. Checkliste</h2>
+<table>
+<tr><th></th><th>Aufgabe</th><th>Zuständig</th><th>Frequenz</th></tr>
+<tr><td>☑</td><td>Export A: Verkaufsstatistik (VKST23-26.csv)</td><td>erledigt</td><td>monatlich aktualisieren</td></tr>
+<tr><td>☐</td><td>Export B: Artikelstammliste (EP, Lagerstand, Lieferant, Lieferzeit, MOQ, VPE)</td><td></td><td>einmalig, dann quartalsweise</td></tr>
+<tr><td>☐</td><td>Export C: Einkaufsbelege 2023–heute (Bestellung + Wareneingang)</td><td></td><td>einmalig, dann monatlich</td></tr>
+<tr><td>☐</td><td>Export D: Rückstandsliste</td><td></td><td><strong>wöchentlich (Freitag)</strong></td></tr>
+<tr><td>☐</td><td>Export E: Artikeljournal 2023–heute</td><td></td><td>einmalig</td></tr>
+<tr><td>☐</td><td>Stichprobe: Sind Lieferzeit/MOQ/VPE im Artikelstamm gepflegt?</td><td></td><td>vor Export B</td></tr>
+<tr><td>☐</td><td>Lagerhaltungskostensatz festlegen (Start: 18–20 %)</td><td>GF/Controlling</td><td>einmalig</td></tr>
+<tr><td>☐</td><td>Bestellkosten schätzen</td><td>Einkauf</td><td>einmalig</td></tr>
+<tr><td>☐</td><td>Ziel-Servicelevel je ABC-Klasse beschließen</td><td>GF/Vertrieb</td><td>einmalig</td></tr>
+</table>
+
+<h2>8. Was mit den Daten passiert</h2>
+<p>Sobald die Exporte B–E vorliegen, wird je Artikel berechnet: durchschnittliche Nachfrage μ<sub>D</sub> und Streuung σ<sub>D</sub> (aus Export A, korrigiert um Fehlmengen aus D/E), Wiederbeschaffungszeit μ<sub>L</sub>/σ<sub>L</sub> (aus C), daraus Sicherheitsbestand (Servicefaktor z × kombinierte Streuung), Meldebestand (ROP = μ<sub>D</sub>·μ<sub>L</sub> + Sicherheitsbestand) und optimale Bestellmenge EOQ = √(2·D·S/H), gerundet auf MOQ/VPE aus Export B. Ergebnis: eine Bestellvorschlagstabelle je Artikel mit ABC/XYZ-Klassifizierung.</p>
+
+<p class="small">Quellen zu den WinLine-Funktionen: mesonic Online-Hilfe (Rückstandsliste), Handbücher WinLine FAKT Teil 1/2 und WinLine LIST (List-Assistent), mesonic EXIM-Modulbeschreibung.</p>
+
+</body>
+</html>

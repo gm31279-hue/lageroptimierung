@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Lageroptimierung – Rechner (Stölner)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Segoe UI',Calibri,Arial,sans-serif; color:#1a1a2e; background:#f4f6f9; margin:0; padding:22px; }
+  .wrap { max-width:1280px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 2px; }
+  .sub { color:#667; font-size:13px; margin-bottom:16px; }
+  h2 { font-size:15px; color:#2c5f8a; margin:0 0 10px; }
+  .panel { background:#fff; border-radius:8px; padding:14px 18px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px; }
+  .step { display:inline-block; background:#2c5f8a; color:#fff; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:13px; margin-right:6px; }
+  .drop { border:2px dashed #2c5f8a; border-radius:8px; background:#f7fafd; padding:14px; text-align:center; color:#2c5f8a; cursor:pointer; font-size:13.5px; }
+  .drop.over { background:#e2eefa; }
+  .drop.ok { border-color:#3a9d5d; color:#2e7d49; background:#eef8f1; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media(max-width:900px){ .grid{grid-template-columns:1fr} }
+  label { font-size:12.5px; color:#445; display:block; margin-bottom:2px; }
+  input[type=number], select, input[type=text] { padding:5px 8px; border:1px solid #ccd; border-radius:5px; width:100%; font-size:13px; background:#fff; }
+  .params { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  button { background:#2c5f8a; color:#fff; border:0; padding:9px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
+  button.sec { background:#5c7a94; font-size:12.5px; padding:7px 12px; }
+  button:disabled { background:#aab6c0; cursor:not-allowed; }
+  .cards { display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 12px; }
+  .card { background:#fff; border-radius:8px; padding:9px 15px; box-shadow:0 1px 3px rgba(0,0,0,.08); min-width:130px; }
+  .card .v { font-size:18px; font-weight:600; color:#2c5f8a; }
+  .card .l { font-size:11.5px; color:#667; }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  th,td { border:1px solid #d5dee7; padding:3px 7px; text-align:left; white-space:nowrap; }
+  th { background:#2c5f8a; color:#fff; position:sticky; top:0; cursor:pointer; }
+  td.num,th.num { text-align:right; }
+  tr:nth-child(even) td { background:#f4f7fa; }
+  .badge { display:inline-block; padding:0 6px; border-radius:8px; font-size:11px; font-weight:600; color:#fff; }
+  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#2c5f8a}.Y{background:#7a6fbd}.Z{background:#c95555}
+  .tblbox { max-height:560px; overflow:auto; border:1px solid #d5dee7; }
+  .rot td { background:#fdecec !important; }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:8px; font-size:13px; }
+  .mapgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; margin-top:8px; }
+  .hint { font-size:12px; color:#667; margin-top:6px; }
+  #resArea { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Lageroptimierung – Rechner</h1>
+<div class="sub">Importiert die WinLine-Exporte und berechnet ABC/XYZ, Sicherheitsbestand, Meldebestand und Bestellmenge je Artikel. Läuft komplett lokal im Browser – keine Daten werden hochgeladen. Formeln wie im Workbook.</div>
+
+<div class="grid">
+  <div class="panel">
+    <h2><span class="step">1</span>Verkaufsstatistik laden (Pflicht)</h2>
+    <div class="drop" id="dropA">📂 <b>VKST-Export</b> (CSV oder XLSX) hier hineinziehen oder klicken<input type="file" id="fileA" accept=".csv,.txt,.xlsx,.xls" style="display:none"></div>
+    <div class="hint">Erwartet den Standard-Export der Verkaufsstatistik (wie VKST23-26.csv). Liefert Nachfrage (μ, σ), ABC/XYZ.</div>
+  </div>
+  <div class="panel">
+    <h2><span class="step">2</span>Artikelstammliste laden (empfohlen)</h2>
+    <div class="drop" id="dropB">📂 <b>Artikelstamm-Export</b> aus dem List-Assistenten (XLSX oder CSV)<input type="file" id="fileB" accept=".csv,.txt,.xlsx,.xls" style="display:none"></div>
+    <div id="mapArea" style="display:none">
+      <div class="hint">Spalten zuordnen (automatisch erkannt – bitte prüfen):</div>
+      <div class="mapgrid" id="mapgrid"></div>
+    </div>
+    <div class="hint">Liefert Einstandspreis, Lagerstand, Mindestbestellmenge (Losgröße), VPE (Colli), Lieferzeit. Ohne diese Datei wird mit Standardwerten gerechnet.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2><span class="step">3</span>Parameter</h2>
+  <div class="params">
+    <div><label>Lagerkostensatz i (%)</label><input type="number" id="pI" value="20" min="1" max="60"></div>
+    <div><label>Bestellkosten S (€/Bestellung)</label><input type="number" id="pS" value="50" min="1"></div>
+    <div><label>Servicelevel A (%)</label><input type="number" id="pSA" value="98" min="50" max="99.9" step="0.5"></div>
+    <div><label>Servicelevel B (%)</label><input type="number" id="pSB" value="95" min="50" max="99.9" step="0.5"></div>
+    <div><label>Servicelevel C (%)</label><input type="number" id="pSC" value="90" min="50" max="99.9" step="0.5"></div>
+    <div><label>Standard-Lieferzeit (Tage)</label><input type="number" id="pL" value="21" min="1"></div>
+    <div><label>Sonderbau ausblenden</label><select id="pSon"><option value="1" selected>Ja (Niro-/Studio-/NST-/„divers“-Artikel)</option><option value="0">Nein</option></select></div>
+    <div><label>Artikel-Ausprägung (",P" etc.)</label><select id="pSuf"><option value="1" selected>Beim Abgleich ignorieren</option><option value="0">Exakt abgleichen</option></select></div>
+  </div>
+  <div style="margin-top:12px"><button id="calc" disabled>Berechnen</button> <span class="hint" id="calcHint">Zuerst Verkaufsstatistik laden.</span></div>
+</div>
+
+<div id="resArea">
+  <div class="cards" id="kpis"></div>
+  <div class="panel">
+    <h2>Bestellvorschlagsliste</h2>
+    <div class="filters">
+      <input type="text" id="q" placeholder="Suchen …" style="width:220px">
+      <label style="display:inline"><input type="checkbox" id="fRed"> nur 🔴 unter Meldebestand</label>
+      <select id="fABC" style="width:110px"><option value="">ABC: alle</option><option>A</option><option>B</option><option>C</option></select>
+      <select id="fXYZ" style="width:110px"><option value="">XYZ: alle</option><option>X</option><option>Y</option><option>Z</option></select>
+      <button class="sec" id="dl">Ergebnis als CSV</button>
+      <span class="hint" id="cnt"></span>
+    </div>
+    <div class="tblbox"><table id="tbl"></table></div>
+    <div class="hint">Sortieren: auf Spaltenkopf klicken. MB = Meldebestand (bestellen, wenn verfügbarer Bestand darunter fällt). Bestellmenge = EOQ, aufgerundet auf MOQ/VPE. Ampel vergleicht den Lagerstand aus dem Artikelstamm-Export (offene Bestellungen beim Lieferanten sind darin nicht berücksichtigt).</div>
+  </div>
+</div>
+</div>
+
+<script>
+// ---------- Helpers ----------
+const $=id=>document.getElementById(id);
+const fmt=(n,d=0)=>(n==null||isNaN(n))?'–':n.toLocaleString('de-AT',{minimumFractionDigits:d,maximumFractionDigits:d});
+function num(x){ if(x==null)return NaN; if(typeof x==='number')return x;
+  let s=(''+x).trim().replace(/\s/g,''); if(!s)return NaN;
+  if(/,\d+$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,'');
+  return parseFloat(s); }
+function zFromSL(p){ // inverse Normal (Acklam-Approximation)
+  if(p<=0||p>=1)return NaN;
+  const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924],
+  b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857],
+  c=[-0.00778489400243029,-0.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878],
+  d=[0.00778469570904146,0.32246712907004,2.445134137143,3.75440866190742], pl=0.02425;
+  let q,r;
+  if(p<pl){ q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
+  if(p<=1-pl){ q=p-0.5; r=q*q; return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1); }
+  q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+function parseCSV(text){
+  const rows=[]; let f='',row=[],q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c=='"'){ if(text[i+1]=='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c=='"')q=true; else if(c==','){row.push(f);f='';}
+    else if(c=='\n'||c=='\r'){ if(f!==''||row.length){row.push(f);rows.push(row);row=[];f='';} if(c=='\r'&&text[i+1]=='\n')i++; }
+    else f+=c; }
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+function decodeBuf(buf){ let t=new TextDecoder('windows-1252').decode(buf);
+  if(/Ã[¤¶¼Ÿ„–œ]/.test(t)) t=new TextDecoder('utf-8').decode(buf); return t; }
+function readAny(file, cb){
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+    if(/\.xlsx?$/i.test(file.name)){
+      const wb=XLSX.read(rd.result,{type:'array',codepage:1252,cellDates:false});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      cb(XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:''}));
+    } else cb(parseCSV(decodeBuf(rd.result)));
+  }catch(e){ alert('Fehler beim Lesen: '+e.message); } };
+  rd.readAsArrayBuffer(file);
+}
+function toISO(s){ s=(''+s).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);
+  let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/); if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if(m){let y=m[3].length==2?'20'+m[3]:m[3];return y+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');}
+  return null; }
+const baseNr=nr=>(''+nr).split(',')[0].trim();
+const SONDER=/^(niro|studio|nst)\s*-|-\s*divers/i;
+
+// ---------- State ----------
+let VK=null, ST=null, STHEAD=[], MAP={}, RES=[], sortKey='ums', sortDir=-1;
+
+// ---------- File A: VKST ----------
+function setupDrop(el,inp,handler){
+  el.onclick=()=>inp.click();
+  el.ondragover=e=>{e.preventDefault();el.classList.add('over');};
+  el.ondragleave=()=>el.classList.remove('over');
+  el.ondrop=e=>{e.preventDefault();el.classList.remove('over');handler(e.dataTransfer.files[0]);};
+  inp.onchange=e=>handler(e.target.files[0]);
+}
+setupDrop($('dropA'),$('fileA'),f=>{ if(!f)return; $('dropA').textContent='⏳ Lese '+f.name+' …';
+  readAny(f,rows=>{ VK=loadVK(rows);
+    $('dropA').classList.add('ok');
+    $('dropA').innerHTML='✅ '+f.name+' – '+fmt(VK.used)+' Zeilen, '+fmt(Object.keys(VK.sku).length)+' Artikel, '+VK.minD+' bis '+VK.maxD;
+    $('calc').disabled=false; $('calcHint').textContent=''; });
+});
+function loadVK(rows){
+  const sku={}; let minD=null,maxD=null,used=0;
+  for(const r of rows){ if(!r||r.length<10)continue;
+    let di=-1,datum=null;
+    for(let i=0;i<r.length;i++){ const d=toISO(r[i]); if(d&&/^\d{4}-\d{2}-\d{2}$/.test(d)&&(''+r[i]).length<=12){di=i;datum=d;break;} }
+    if(di<0)continue;
+    const menge=num(r[di+1])||0, ums=num(r[di+3])||0, db=num(r[di+5])||0;
+    const nr=(r[1]||'').toString().trim(), name=(r[2]||'').toString().trim(), grp=(r[9]||'').toString().trim()||'(ohne)';
+    if(!nr||!/^\w/.test(nr))continue;
+    used++; if(!minD||datum<minD)minD=datum; if(!maxD||datum>maxD)maxD=datum;
+    let s=sku[nr]; if(!s)s=sku[nr]={nr,name,grp,menge:0,ums:0,db:0,m:{}};
+    s.menge+=menge; s.ums+=ums; s.db+=db;
+    const mk=datum.slice(0,7); s.m[mk]=(s.m[mk]||0)+menge;
+  }
+  return {sku,minD,maxD,used};
+}
+
+// ---------- File B: Artikelstamm ----------
+const FIELDS=[['art','Artikelnummer *',/artikelnu|artnr|artikel-nr/i],['bez','Bezeichnung',/bezeich/i],
+ ['ep','Einstandspreis *',/letzter eink|letzter ep|einstands/i],['ep2','EP-Alternative',/allg\.?\s*eink|niedrigster/i],
+ ['lag','Lagerstand',/lagerstand/i],['moq','MOQ (Losgröße)',/losgr|mindestbestellm/i],
+ ['vpe','VPE (Colli)',/colli/i],['lt','Lieferzeit (Tage)',/beschaffung|lieferzeit/i]];
+setupDrop($('dropB'),$('fileB'),f=>{ if(!f)return; $('dropB').textContent='⏳ Lese '+f.name+' …';
+  readAny(f,rows=>{ if(!rows.length){alert('Datei leer');return;}
+    STHEAD=rows[0].map(x=>(''+x).trim()); ST=rows.slice(1).filter(r=>r&&r.some(x=>(''+x).trim()!==''));
+    $('dropB').classList.add('ok'); $('dropB').innerHTML='✅ '+f.name+' – '+fmt(ST.length)+' Artikel-Zeilen';
+    buildMap(); });
+});
+function buildMap(){
+  $('mapArea').style.display='block';
+  $('mapgrid').innerHTML=FIELDS.map(([k,lbl])=>{
+    const opts=['<option value="">– nicht vorhanden –</option>']
+      .concat(STHEAD.map((h,i)=>`<option value="${i}">${h||('Spalte '+(i+1))}</option>`)).join('');
+    return `<div><label>${lbl}</label><select data-k="${k}">${opts}</select></div>`; }).join('');
+  document.querySelectorAll('#mapgrid select').forEach(sel=>{
+    const [k,,rx]=FIELDS.find(f=>f[0]==sel.dataset.k);
+    const gi=STHEAD.findIndex(h=>rx.test(h)); if(gi>=0)sel.value=gi;
+    sel.onchange=()=>MAP[sel.dataset.k]=sel.value===''?null:+sel.value;
+    MAP[k]=sel.value===''?null:+sel.value; });
+}
+function stammLookup(){
+  const m={}; if(!ST)return m;
+  const ig=$('pSuf').value=='1';
+  for(const r of ST){ if(MAP.art==null)break;
+    const raw=(''+(r[MAP.art]??'')).trim(); if(!raw)continue;
+    const key=ig?baseNr(raw):raw;
+    const g=v=>v==null?NaN:num(r[v]);
+    const rec={ep:g(MAP.ep)||g(MAP.ep2),lag:g(MAP.lag),moq:g(MAP.moq),vpe:g(MAP.vpe),lt:g(MAP.lt)};
+    if(m[key]){ // mehrere Ausprägungen: Lagerstand summieren, Rest: erster gültiger Wert
+      m[key].lag=(m[key].lag||0)+(rec.lag||0);
+      for(const k of ['ep','moq','vpe','lt']) if(!(m[key][k]>0)&&rec[k]>0)m[key][k]=rec[k];
+    } else m[key]=rec;
+  }
+  return m;
+}
+
+// ---------- Berechnung ----------
+$('calc').onclick=()=>{
+  const i=num($('pI').value)/100, S=num($('pS').value), Ldef=num($('pL').value),
+        z={A:zFromSL(num($('pSA').value)/100),B:zFromSL(num($('pSB').value)/100),C:zFromSL(num($('pSC').value)/100)},
+        dropSon=$('pSon').value=='1', ig=$('pSuf').value=='1';
+  try{ localStorage.setItem('lagerParams',JSON.stringify({i:$('pI').value,S:$('pS').value,SA:$('pSA').value,SB:$('pSB').value,SC:$('pSC').value,L:$('pL').value})); }catch(e){}
+  // Monate
+  const months=[]; { let [y,m]=VK.minD.slice(0,7).split('-').map(Number); const [Y,M]=VK.maxD.slice(0,7).split('-').map(Number);
+    while(y<Y||(y==Y&&m<=M)){months.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}} }
+  const n=months.length, stamm=stammLookup(), totU=Object.values(VK.sku).reduce((a,s)=>a+s.ums,0);
+  let list=Object.values(VK.sku).filter(s=>!(dropSon&&SONDER.test(s.name)));
+  for(const s of list){
+    const ser=months.map(mk=>s.m[mk]||0);
+    s.mu=ser.reduce((a,b)=>a+b,0)/n;
+    s.sig=Math.sqrt(ser.reduce((a,b)=>a+(b-s.mu)*(b-s.mu),0)/n);
+    s.cv=s.mu>0?s.sig/s.mu:Infinity;
+    s.xyz=s.cv<=0.5?'X':(s.cv<=1?'Y':'Z');
+  }
+  list.sort((a,b)=>b.ums-a.ums); let cum=0;
+  for(const s of list){ cum+=Math.max(s.ums,0); s.abc=s.ums<=0?'C':(cum/totU<=0.80?'A':(cum/totU<=0.95?'B':'C')); }
+  for(const s of list){
+    const st=stamm[ig?baseNr(s.nr):s.nr]||{};
+    s.ep=st.ep>0?st.ep:null; s.lag=isNaN(st.lag)?null:st.lag;
+    s.moq=st.moq>0?st.moq:1; s.vpe=st.vpe>0?st.vpe:1;
+    s.lt=st.lt>0?st.lt:Ldef; const Lm=s.lt/30, zz=z[s.abc];
+    s.z=zz; s.sb=Math.ceil(zz*s.sig*Math.sqrt(Lm));
+    s.mb=Math.ceil(s.mu*Lm+ (zz*s.sig*Math.sqrt(Lm)));
+    if(s.ep){ const D=s.mu*12, H=s.ep*i;
+      s.eoq=D>0&&H>0?Math.sqrt(2*D*S/H):null;
+      if(s.eoq){ let q=Math.max(s.eoq,s.moq); q=Math.ceil(q/s.vpe)*s.vpe; s.best=q; } else s.best=null;
+    } else { s.eoq=null; s.best=null; }
+    s.ampel = (s.lag==null)?'':(s.lag<s.mb?'rot':'gruen');
+  }
+  RES=list; renderKPI(totU,n,stamm); renderTable(); $('resArea').style.display='block';
+  window.scrollTo({top:$('resArea').offsetTop-10,behavior:'smooth'});
+};
+function renderKPI(totU,n,stamm){
+  const red=RES.filter(s=>s.ampel=='rot'), a=RES.filter(s=>s.abc=='A');
+  const lagWert=RES.reduce((q,s)=>q+((s.lag>0&&s.ep)?s.lag*s.ep:0),0);
+  $('kpis').innerHTML=[["Artikel in Analyse",fmt(RES.length)],["Monate",n],
+   ["A-Artikel",fmt(a.length)],["🔴 unter Meldebestand",fmt(red.length)+(ST?'':' (Stamm fehlt)')],
+   ["Lagerwert (erfasst)",ST?fmt(lagWert)+' €':'–'],["Umsatz Zeitraum",fmt(totU)+' €']]
+   .map(([l,v])=>`<div class="card"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+}
+const COLS=[['ampel',''],['abc','ABC'],['xyz','XYZ'],['nr','Artikelnr.'],['name','Bezeichnung'],
+ ['mu','μ/Monat'],['sig','σ'],['cv','CV'],['lt','L (Tage)'],['sb','Sicherheitsbest.'],['mb','Meldebest.'],
+ ['lag','Lagerstand'],['best','Bestellmenge'],['ep','EP €'],['ums','Umsatz €']];
+function renderTable(){
+  const q=($('q').value||'').toLowerCase(), red=$('fRed').checked, fa=$('fABC').value, fx=$('fXYZ').value;
+  let l=RES.filter(s=>(!q||(s.nr+' '+s.name+' '+s.grp).toLowerCase().includes(q))
+    &&(!red||s.ampel=='rot')&&(!fa||s.abc==fa)&&(!fx||s.xyz==fx));
+  l.sort((a,b)=>{const x=a[sortKey],y=b[sortKey];
+    if(x==null&&y==null)return 0; if(x==null)return 1; if(y==null)return -1;
+    return (typeof x=='string'?(''+x).localeCompare(''+y,'de'):x-y)*sortDir;});
+  const top=l.slice(0,400);
+  let h='<tr>'+COLS.map(([k,t])=>`<th data-k="${k}" ${'muk sig cv lt sb mb lag best ep ums'.includes(k)?'class="num"':''}>${t}${sortKey==k?(sortDir<0?' ▼':' ▲'):''}</th>`).join('')+'</tr>';
+  for(const s of top){
+    h+=`<tr class="${s.ampel=='rot'?'rot':''}"><td>${s.ampel=='rot'?'🔴':s.ampel=='gruen'?'🟢':'–'}</td>
+    <td><span class="badge ${s.abc}">${s.abc}</span></td><td><span class="badge ${s.xyz}">${s.xyz}</span></td>
+    <td>${s.nr}</td><td style="white-space:normal">${s.name}</td>
+    <td class="num">${fmt(s.mu,2)}</td><td class="num">${fmt(s.sig,2)}</td><td class="num">${s.cv==Infinity?'–':fmt(s.cv,2)}</td>
+    <td class="num">${fmt(s.lt)}</td><td class="num">${fmt(s.sb)}</td><td class="num"><b>${fmt(s.mb)}</b></td>
+    <td class="num">${fmt(s.lag)}</td><td class="num"><b>${fmt(s.best)}</b></td>
+    <td class="num">${fmt(s.ep,2)}</td><td class="num">${fmt(s.ums)}</td></tr>`;
+  }
+  $('tbl').innerHTML=h;
+  $('cnt').textContent='Angezeigt: '+top.length+' von '+l.length+' Artikeln';
+  document.querySelectorAll('#tbl th').forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; if(sortKey==k)sortDir*=-1; else {sortKey=k;sortDir=-1;} renderTable(); });
+}
+['q','fRed','fABC','fXYZ'].forEach(id=>{$(id).oninput=renderTable;$(id).onchange=renderTable;});
+$('dl').onclick=()=>{
+  const head='Artikelnr;Bezeichnung;Gruppe;ABC;XYZ;MuMonat;Sigma;CV;LieferzeitTage;zFaktor;Sicherheitsbestand;Meldebestand;Lagerstand;EOQ;Bestellmenge;MOQ;VPE;EP;Umsatz;Ampel\n';
+  const rows=RES.map(s=>[s.nr,'"'+s.name.replace(/"/g,'""')+'"','"'+s.grp+'"',s.abc,s.xyz,
+    s.mu.toFixed(3),s.sig.toFixed(3),s.cv==Infinity?'':s.cv.toFixed(3),s.lt,s.z.toFixed(2),s.sb,s.mb,
+    s.lag==null?'':s.lag,s.eoq==null?'':s.eoq.toFixed(1),s.best==null?'':s.best,s.moq,s.vpe,
+    s.ep==null?'':s.ep.toFixed(2),s.ums.toFixed(2),s.ampel].join(';')).join('\n');
+  const blob=new Blob(['﻿'+head+rows],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='Bestellvorschlag_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+};
+// Parameter aus letzter Sitzung
+try{ const p=JSON.parse(localStorage.getItem('lagerParams')||'{}');
+  if(p.i)$('pI').value=p.i; if(p.S)$('pS').value=p.S; if(p.SA)$('pSA').value=p.SA;
+  if(p.SB)$('pSB').value=p.SB; if(p.SC)$('pSC').value=p.SC; if(p.L)$('pL').value=p.L; }catch(e){}
+</script>
+</body>
+</html>

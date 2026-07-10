@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Lageroptimierung – Nachfrageanalyse (VKST)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; color:#1a1a2e; background:#f4f6f9; margin:0; padding:24px; }
+  .wrap { max-width:1200px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:#667; font-size:13px; margin-bottom:18px; }
+  #drop { border:2px dashed #2c5f8a; border-radius:10px; background:#fff; padding:40px; text-align:center; color:#2c5f8a; cursor:pointer; font-size:15px; }
+  #drop.over { background:#e8f1fa; }
+  .cards { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }
+  .card { background:#fff; border-radius:8px; padding:12px 18px; box-shadow:0 1px 3px rgba(0,0,0,.08); min-width:150px; }
+  .card .v { font-size:20px; font-weight:600; color:#2c5f8a; }
+  .card .l { font-size:12px; color:#667; }
+  .panel { background:#fff; border-radius:8px; padding:16px 20px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:18px; }
+  h2 { font-size:16px; color:#2c5f8a; margin:0 0 10px; }
+  table { border-collapse:collapse; width:100%; font-size:12.5px; }
+  th,td { border:1px solid #d5dee7; padding:4px 8px; text-align:left; }
+  th { background:#2c5f8a; color:#fff; position:sticky; top:0; }
+  td.num, th.num { text-align:right; }
+  tr:nth-child(even) td { background:#f4f7fa; }
+  .badge { display:inline-block; padding:1px 7px; border-radius:9px; font-size:11px; font-weight:600; color:#fff; }
+  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#2c5f8a}.Y{background:#7a6fbd}.Z{background:#c95555}
+  .matrix td { text-align:center; }
+  .interp { background:#eef4fa; border-left:4px solid #2c5f8a; padding:10px 14px; font-size:13.5px; }
+  input[type=text] { padding:6px 10px; border:1px solid #ccd; border-radius:5px; width:280px; margin-bottom:8px; }
+  button { background:#2c5f8a; color:#fff; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:900px){ .grid2{grid-template-columns:1fr} }
+  #results { display:none; }
+  .tblbox { max-height:520px; overflow:auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Nachfrageanalyse für die Lageroptimierung</h1>
+<div class="sub">Wertet die WinLine-Verkaufsstatistik aus (z. B. <b>VKST23-26.csv</b>): ABC/XYZ, Nachfrageverteilung (μ, σ), Kanaltrennung. Alles läuft lokal im Browser – es werden keine Daten hochgeladen.</div>
+
+<div id="drop">📂 <b>VKST-CSV hier hineinziehen</b> oder klicken zum Auswählen
+<input type="file" id="file" accept=".csv,.txt" style="display:none"></div>
+
+<div id="results">
+  <div class="cards" id="kpis"></div>
+
+  <div class="panel"><h2>Interpretation</h2><div class="interp" id="interp"></div></div>
+
+  <div class="grid2">
+    <div class="panel"><h2>Pareto: Umsatzkonzentration (ABC)</h2><canvas id="pareto" height="220"></canvas></div>
+    <div class="panel"><h2>Umsatz nach Kundentyp (Kanaltrennung)</h2><canvas id="chan" height="220"></canvas></div>
+  </div>
+
+  <div class="panel">
+    <h2>ABC-XYZ-Matrix (Anzahl Artikel · Umsatzanteil)</h2>
+    <table class="matrix" id="mtx"></table>
+    <div class="sub" style="margin-top:8px">X = gleichmäßige Nachfrage (CV ≤ 0,5) · Y = schwankend (CV ≤ 1) · Z = sporadisch/unregelmäßig (CV &gt; 1). CV = σ/μ der Monatsnachfrage inkl. Nullmonate.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Artikel-Detailtabelle</h2>
+    <input type="text" id="search" placeholder="Suchen (Artikelnr., Name, Gruppe, Klasse) …">
+    <button id="dl">Gesamtergebnis als CSV herunterladen</button>
+    <div class="tblbox"><table id="tbl"></table></div>
+    <div class="sub" id="tblnote"></div>
+  </div>
+</div>
+</div>
+
+<script>
+let SKUS = [], MONTHS = [];
+const fmt = (n,d=0)=>n.toLocaleString('de-AT',{minimumFractionDigits:d,maximumFractionDigits:d});
+const eur = n=>fmt(n,0)+' €';
+
+// --- CSV-Parser (Anführungszeichen-sicher) ---
+function parseCSV(text){
+  const rows=[]; let f='',row=[],q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c=='"'){ if(text[i+1]=='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c=='"') q=true;
+    else if(c==','){ row.push(f); f=''; }
+    else if(c=='\n'||c=='\r'){ if(f!==''||row.length){row.push(f);rows.push(row);row=[];f='';} if(c=='\r'&&text[i+1]=='\n')i++; }
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+
+function monthKey(d){ return d.slice(0,7); }
+function monthRange(a,b){ // 'YYYY-MM'
+  const out=[]; let [y,m]=a.split('-').map(Number); const [Y,M]=b.split('-').map(Number);
+  while(y<Y||(y==Y&&m<=M)){ out.push(y+'-'+String(m).padStart(2,'0')); m++; if(m>12){m=1;y++;} }
+  return out;
+}
+
+function analyze(rows){
+  const sku={}, chan={}; let minD=null,maxD=null, totU=0, totDB=0, used=0;
+  for(const r of rows){
+    if(r.length<10) continue;
+    const di = r.findIndex(x=>/^\d{4}-\d{2}-\d{2}$/.test(x));
+    if(di<0) continue;
+    const datum=r[di], menge=parseFloat(r[di+1])||0, ums=parseFloat(r[di+3])||0, db=parseFloat(r[di+5])||0;
+    const nr=(r[1]||'').trim(), name=(r[2]||'').trim(), grp=(r[9]||'').trim()||'(ohne)', typ=(r[18]||'').trim()||'(ohne)';
+    if(!nr) continue;
+    used++;
+    if(!minD||datum<minD)minD=datum; if(!maxD||datum>maxD)maxD=datum;
+    totU+=ums; totDB+=db;
+    chan[typ]=(chan[typ]||0)+ums;
+    let s=sku[nr]; if(!s) s=sku[nr]={nr,name,grp,menge:0,ums:0,db:0,m:{},typ:{}};
+    s.menge+=menge; s.ums+=ums; s.db+=db;
+    const mk=monthKey(datum); s.m[mk]=(s.m[mk]||0)+menge;
+    s.typ[typ]=(s.typ[typ]||0)+ums;
+  }
+  MONTHS = monthRange(monthKey(minD), monthKey(maxD));
+  const n=MONTHS.length;
+  let list=Object.values(sku);
+  for(const s of list){
+    const series=MONTHS.map(mk=>s.m[mk]||0);
+    const mu=series.reduce((a,b)=>a+b,0)/n;
+    const sig=Math.sqrt(series.reduce((a,b)=>a+(b-mu)*(b-mu),0)/n);
+    s.mu=mu; s.sig=sig; s.cv=mu>0?sig/mu:Infinity;
+    s.xyz = s.cv<=0.5?'X':(s.cv<=1?'Y':'Z');
+    const h=(s.typ['Händler']||0); s.haendler = s.ums>0? h/s.ums : 0;
+    s.marge = s.ums>0 ? s.db/s.ums : 0;
+  }
+  list.sort((a,b)=>b.ums-a.ums);
+  let cum=0;
+  for(const s of list){ cum+=Math.max(s.ums,0); const sh=cum/totU; s.abc = sh<=0.80?'A':(sh<=0.95?'B':'C'); if(s.ums<=0)s.abc='C'; }
+  SKUS=list;
+  render({minD,maxD,totU,totDB,used,chan,n});
+}
+
+function render(g){
+  document.getElementById('results').style.display='block';
+  const nA=SKUS.filter(s=>s.abc=='A'), nB=SKUS.filter(s=>s.abc=='B'), nC=SKUS.filter(s=>s.abc=='C');
+  // KPIs
+  document.getElementById('kpis').innerHTML = [
+    ['Zeitraum', g.minD+' – '+g.maxD],
+    ['Monate', g.n], ['Belegzeilen', fmt(g.used)], ['Artikel (SKUs)', fmt(SKUS.length)],
+    ['Umsatz gesamt', eur(g.totU)], ['Deckungsbeitrag', eur(g.totDB)+' ('+fmt(g.totDB/g.totU*100,1)+' %)'],
+    ['A-Artikel', fmt(nA.length)], ['davon Z (kritisch)', fmt(nA.filter(s=>s.xyz=='Z').length)]
+  ].map(([l,v])=>`<div class="card"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  // Interpretation
+  const az=nA.filter(s=>s.xyz=='Z').length, ax=nA.filter(s=>s.xyz=='X').length;
+  const uA=nA.reduce((a,s)=>a+s.ums,0);
+  document.getElementById('interp').innerHTML =
+    `<b>${fmt(nA.length)} A-Artikel</b> (${fmt(nA.length/SKUS.length*100,1)} % der SKUs) erzeugen ` +
+    `<b>${fmt(uA/g.totU*100,1)} % des Umsatzes</b> – hier lohnt sich die Optimierung zuerst. ` +
+    `Davon haben <b>${ax} Artikel</b> eine gleichmäßige Nachfrage (AX → klassische EOQ/Meldebestand-Steuerung ideal) und ` +
+    `<b>${az} Artikel</b> eine stark unregelmäßige Nachfrage (AZ → hoher Umsatz, aber schwer prognostizierbar: hier Sicherheitsbestand bewusst setzen oder auftragsbezogen beschaffen). ` +
+    `${fmt(nC.length)} C-Artikel (${fmt(nC.length/SKUS.length*100,1)} % der SKUs) tragen zusammen nur ~5 % zum Umsatz bei – Kandidaten für Bestandsreduktion, größere Bestellintervalle oder Sortimentsbereinigung. ` +
+    `<br><br><i>Hinweis: Verkäufe ≠ Nachfrage bei Fehlmengen (siehe Exporte D/E der Anleitung); Gutschriften/negative Mengen sind saldiert; die letzten Monate können unvollständig sein.</i>`;
+
+  // Matrix
+  const cls=['A','B','C'], xyz=['X','Y','Z'];
+  let html='<tr><th></th>'+xyz.map(x=>`<th style="text-align:center">${x}</th>`).join('')+'<th style="text-align:center">Σ</th></tr>';
+  for(const a of cls){
+    html+=`<tr><th>${a}</th>`;
+    for(const x of xyz){
+      const f=SKUS.filter(s=>s.abc==a&&s.xyz==x); const u=f.reduce((q,s)=>q+s.ums,0);
+      html+=`<td><b>${f.length}</b><br><span class="sub">${fmt(u/g.totU*100,1)} %</span></td>`;
+    }
+    const fa=SKUS.filter(s=>s.abc==a);
+    html+=`<td><b>${fa.length}</b><br><span class="sub">${fmt(fa.reduce((q,s)=>q+s.ums,0)/g.totU*100,1)} %</span></td></tr>`;
+  }
+  document.getElementById('mtx').innerHTML=html;
+
+  // Charts
+  try{
+    const N=Math.min(SKUS.length,300); let c=0;
+    const pd=SKUS.slice(0,N).map(s=>{c+=s.ums; return c/g.totU*100;});
+    new Chart(document.getElementById('pareto'),{type:'line',data:{labels:pd.map((_,i)=>i+1),
+      datasets:[{label:'Kumulierter Umsatzanteil %',data:pd,borderColor:'#2c5f8a',pointRadius:0,fill:true,backgroundColor:'rgba(44,95,138,.12)'}]},
+      options:{scales:{y:{max:100,ticks:{callback:v=>v+' %'}},x:{title:{display:true,text:'Artikel (nach Umsatz sortiert)'}}},plugins:{legend:{display:false}}}});
+    const ce=Object.entries(g.chan).sort((a,b)=>b[1]-a[1]);
+    new Chart(document.getElementById('chan'),{type:'bar',data:{labels:ce.map(e=>e[0]),
+      datasets:[{data:ce.map(e=>e[1]),backgroundColor:'#2c5f8a'}]},
+      options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v/1000)+' k€'}}}}});
+  }catch(e){ console.warn('Charts:',e); }
+
+  drawTable('');
+  document.getElementById('search').oninput=e=>drawTable(e.target.value.toLowerCase());
+  document.getElementById('dl').onclick=downloadCSV;
+}
+
+function drawTable(q){
+  let list=SKUS;
+  if(q) list=list.filter(s=>(s.nr+' '+s.name+' '+s.grp+' '+s.abc+s.xyz).toLowerCase().includes(q));
+  const top=list.slice(0,150);
+  let h=`<tr><th>ABC</th><th>XYZ</th><th>Artikelnr.</th><th>Bezeichnung</th><th>Gruppe</th>
+  <th class="num">Σ Menge</th><th class="num">μ/Monat</th><th class="num">σ</th><th class="num">CV</th>
+  <th class="num">Umsatz €</th><th class="num">DB-Marge</th><th class="num">Händler-Anteil</th></tr>`;
+  for(const s of top){
+    h+=`<tr><td><span class="badge ${s.abc}">${s.abc}</span></td><td><span class="badge ${s.xyz}">${s.xyz}</span></td>
+    <td>${s.nr}</td><td>${s.name}</td><td>${s.grp}</td>
+    <td class="num">${fmt(s.menge)}</td><td class="num">${fmt(s.mu,2)}</td><td class="num">${fmt(s.sig,2)}</td>
+    <td class="num">${s.cv==Infinity?'–':fmt(s.cv,2)}</td><td class="num">${fmt(s.ums)}</td>
+    <td class="num">${fmt(s.marge*100,1)} %</td><td class="num">${fmt(s.haendler*100,0)} %</td></tr>`;
+  }
+  document.getElementById('tbl').innerHTML=h;
+  document.getElementById('tblnote').textContent=`Angezeigt: ${top.length} von ${list.length} Artikeln (sortiert nach Umsatz). Vollständige Liste über den CSV-Download.`;
+}
+
+function downloadCSV(){
+  const head='Artikelnr;Bezeichnung;Gruppe;ABC;XYZ;SummeMenge;MuMonat;Sigma;CV;Umsatz;DB;DBMargeProzent;HaendlerAnteilProzent\n';
+  const body=SKUS.map(s=>[s.nr,'"'+s.name.replace(/"/g,'""')+'"','"'+s.grp+'"',s.abc,s.xyz,s.menge,
+    s.mu.toFixed(3),s.sig.toFixed(3),s.cv==Infinity?'':s.cv.toFixed(3),s.ums.toFixed(2),s.db.toFixed(2),
+    (s.marge*100).toFixed(1),(s.haendler*100).toFixed(1)].join(';')).join('\n');
+  const blob=new Blob(['﻿'+head+body],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ABC_XYZ_Analyse.csv'; a.click();
+}
+
+// --- File handling (Windows-1252-Dekodierung für Umlaute) ---
+const drop=document.getElementById('drop'), inp=document.getElementById('file');
+drop.onclick=()=>inp.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');loadFile(e.dataTransfer.files[0]);};
+inp.onchange=e=>loadFile(e.target.files[0]);
+function loadFile(f){
+  if(!f)return;
+  drop.innerHTML='⏳ Analysiere '+f.name+' …';
+  const rd=new FileReader();
+  rd.onload=()=>{
+    let text=new TextDecoder('windows-1252').decode(rd.result);
+    if(/Ã[¤¶¼Ÿ„–œ]/.test(text)) text=new TextDecoder('utf-8').decode(rd.result); // Datei war doch UTF-8
+    try{ analyze(parseCSV(text)); drop.innerHTML='✅ '+f.name+' analysiert. Andere Datei? Einfach erneut hineinziehen.'; }
+    catch(err){ drop.innerHTML='❌ Fehler: '+err.message; }
+  };
+  rd.readAsArrayBuffer(f);
+}
+</script>
+</body>
+</html>
