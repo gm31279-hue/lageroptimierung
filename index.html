@@ -7,26 +7,36 @@
 <style>
   body { font-family:'Segoe UI',Calibri,Arial,sans-serif; color:#1a1a2e; background:#f4f6f9; margin:0; padding:40px 20px; }
   .wrap { max-width:760px; margin:0 auto; }
-  h1 { font-size:26px; border-bottom:3px solid #2c5f8a; padding-bottom:8px; }
+  h1 { font-size:26px; border-bottom:3px solid #E5007D; padding-bottom:8px; }
   .sub { color:#667; font-size:14px; margin-bottom:24px; }
   a.card { display:block; background:#fff; border-radius:10px; padding:18px 22px; margin-bottom:14px;
-    box-shadow:0 1px 4px rgba(0,0,0,.09); text-decoration:none; color:inherit; border-left:5px solid #2c5f8a; }
+    box-shadow:0 1px 4px rgba(0,0,0,.09); text-decoration:none; color:inherit; border-left:5px solid #E5007D; }
   a.card:hover { box-shadow:0 3px 10px rgba(0,0,0,.15); }
-  a.card h2 { margin:0 0 4px; font-size:17px; color:#2c5f8a; }
+  a.card h2 { margin:0 0 4px; font-size:17px; color:#E5007D; }
   a.card p { margin:0; font-size:13.5px; color:#445; }
-  .tag { display:inline-block; background:#eef4fa; color:#2c5f8a; border-radius:10px; padding:1px 10px; font-size:11.5px; font-weight:600; margin-left:8px; vertical-align:middle; }
+  .tag { display:inline-block; background:#eef4fa; color:#E5007D; border-radius:10px; padding:1px 10px; font-size:11.5px; font-weight:600; margin-left:8px; vertical-align:middle; }
   .note { background:#e9f6ec; border-left:4px solid #3a9d5d; padding:10px 14px; font-size:13px; margin-top:22px; border-radius:0 6px 6px 0; }
   .foot { color:#889; font-size:12px; margin-top:26px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>Lageroptimierung</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:20px"><h1 style="flex:1">Lageroptimierung</h1><img src="logo.png" onerror="this.onerror=null;this.src='https://www.stoelner.at/themes/stoelner-2021/build/pix/logo1.png'" alt="Stölner – high five" style="height:80px"></div>
 <div class="sub">Datengetriebene Bestandssteuerung – Werkzeuge &amp; Dokumentation | Stölner GesmbH</div>
 
 <a class="card" href="Lageroptimierung_Rechner.html">
   <h2>🧮 Rechner – Bestellvorschläge berechnen <span class="tag">App</span></h2>
   <p>Verkaufsstatistik + Artikelstamm importieren → ABC/XYZ, Sicherheitsbestand, Meldebestand und Bestellmenge je Artikel, mit Ampel und CSV-Export. Alle Daten bleiben im Browser.</p>
+</a>
+
+<a class="card" href="Leitfaden_Datenbedarf_WinLine.html">
+  <h2>🗺️ Leitfaden – Datenbedarf auf einen Blick <span class="tag">Start hier</span></h2>
+  <p>Eine Seite: welche Daten wir aus der WinLine brauchen, wie wir sie exportieren und wie ausgewertet wird. Der schnellste Einstieg ins Thema.</p>
+</a>
+
+<a class="card" href="Handbuch_Einkauf_Innendienst.html">
+  <h2>📙 Handbuch Einkauf &amp; Innendienst <span class="tag">Prozess</span></h2>
+  <p>Wochen-, Monats- und Quartalsroutine, Bestellregeln je Artikelklasse, Sonderfälle und Zuständigkeiten.</p>
 </a>
 
 <a class="card" href="Lageroptimierung_Analyse_Tool.html">
@@ -44,7 +54,7 @@
   <p>Schritt für Schritt: welche Daten aus der WinLine kommen und wie sie exportiert werden (Exporte A–E, Checkliste, Zuständigkeiten).</p>
 </a>
 
-<div class="note"><strong>Datenschutz:</strong> Die Apps verarbeiten alle importierten Dateien ausschließlich lokal im Browser. Es werden keine Verkaufs- oder Artikeldaten hochgeladen oder gespeichert – auch wenn diese Seite öffentlich gehostet ist. Echte Exportdateien gehören trotzdem <em>nicht</em> ins Repository.</div>
+<div class="note"><strong>Schnellstart (z. B. für Ernst):</strong> 1) Leitfaden lesen (5 Minuten) → 2) Rechner öffnen → 3) die beiden Beispieldateien aus dem Ordner <code>daten/</code> hineinziehen (Verkaufsstatistik + Artikelstamm) → „Berechnen“. Alles läuft lokal im Browser – importierte Daten verlassen den eigenen Rechner nicht.</div>
 
 <div class="foot">Empfohlener Ablauf: 1) Exportanleitung → 2) Workbook lesen → 3) Rechner verwenden. Fragen: Günther Maurer.</div>
 </div>

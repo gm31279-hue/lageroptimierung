@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Leitfaden: Datenbedarf aus der WinLine | Stölner</title>
+<style>
+  :root { --m:#E5007D; --g:#575756; --l:#d9d9d9; }
+  body { font-family:'Segoe UI',Calibri,Arial,sans-serif; color:#3c3c3c; max-width:880px; margin:0 auto; padding:0 30px 40px; line-height:1.55; }
+  .kopf { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:24px 0 12px; border-bottom:5px solid var(--m); }
+  .kopf h1 { margin:0; font-size:23px; color:var(--g); }
+  .kopf .unter { color:var(--m); font-weight:600; font-size:13px; letter-spacing:.5px; }
+  .kopf img { height:78px; }
+  .meta { color:#8a8a8a; font-size:12px; margin:8px 0 20px; }
+  h2 { font-size:17px; color:var(--m); margin-top:28px; border-bottom:1px solid var(--l); padding-bottom:3px; }
+  table { border-collapse:collapse; width:100%; margin:12px 0; font-size:13px; }
+  th,td { border:1px solid var(--l); padding:5px 9px; text-align:left; vertical-align:top; }
+  th { background:var(--g); color:#fff; }
+  tr:nth-child(even) td { background:#f5f5f5; }
+  .fluss { display:flex; gap:8px; align-items:stretch; margin:16px 0; flex-wrap:wrap; }
+  .schritt { flex:1; min-width:150px; background:#fdeef6; border:1px solid var(--m); border-radius:8px; padding:10px 12px; font-size:12.5px; }
+  .schritt b { color:var(--m); display:block; margin-bottom:3px; font-size:13px; }
+  .pfeil { align-self:center; color:var(--m); font-size:20px; font-weight:700; }
+  .box { background:#fdeef6; border-left:4px solid var(--m); padding:9px 13px; margin:12px 0; font-size:13px; }
+  code { background:#f0f0f0; padding:1px 5px; border-radius:3px; font-size:12.5px; }
+  .fuss { margin-top:36px; border-top:5px solid var(--m); padding-top:8px; font-size:11.5px; color:#8a8a8a; display:flex; justify-content:space-between; }
+  @media print { body{padding:0} }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div>
+    <h1>Leitfaden: Welche Daten brauchen wir aus der WinLine – und wie kommen wir dazu?</h1>
+    <div class="unter">LAGEROPTIMIERUNG · AUF EINEN BLICK</div>
+  </div>
+  <img src="logo.png" onerror="this.onerror=null;this.src='https://www.stoelner.at/themes/stoelner-2021/build/pix/logo1.png'" alt="Stölner">
+</div>
+<div class="meta">Stölner GesmbH · Stand 10.07.2026 · Detailanleitungen: WinLine-Exportanleitung &amp; Workbook</div>
+
+<h2>Die Idee in einem Satz</h2>
+<p>Aus fünf WinLine-Exporten berechnen wir für jeden Lagerartikel automatisch, <strong>wann</strong> bestellt werden muss (Meldebestand) und <strong>wie viel</strong> (optimale Bestellmenge) – Ziel: lieferfähig bleiben bei möglichst wenig gebundenem Kapital.</p>
+
+<div class="fluss">
+  <div class="schritt"><b>1 · WinLine</b>Exporte A–E ziehen (Excel/CSV)</div>
+  <div class="pfeil">→</div>
+  <div class="schritt"><b>2 · Rechner</b>Dateien per Drag &amp; Drop in die Browser-App, „Berechnen“</div>
+  <div class="pfeil">→</div>
+  <div class="schritt"><b>3 · Rote Liste</b>Artikel unter Meldebestand mit fertiger Bestellmenge</div>
+  <div class="pfeil">→</div>
+  <div class="schritt"><b>4 · WinLine</b>Bestellungen anlegen, Abweichungen vermerken</div>
+</div>
+
+<h2>Diese Daten brauchen wir – und so kommen wir dazu</h2>
+<table>
+<tr><th>Export</th><th>Welche Daten</th><th>Wofür</th><th>Weg in der WinLine</th><th>Wie oft</th></tr>
+<tr><td><b>A</b> Verkaufsstatistik</td><td>Artikel, Kunde, Kundentyp, Datum, Menge, Umsatz, DB (ab 2023)</td><td>Nachfrage μ/σ, ABC/XYZ, Kanaltrennung</td><td>Statistik-Auswertung → Export Excel/CSV</td><td>monatlich</td></tr>
+<tr><td><b>B</b> Artikelstammliste</td><td>Einkaufspreise, Lagerstand, Losgröße (MOQ), Colli (VPE), Beschaffungszeitraum</td><td>Bestellkosten-Rechnung, Rundung, Ampel</td><td>List-Assistent, Liste „ARTSTAMM Einstandspreise MOQ VPE“ → Ausgabe Tabelle</td><td>quartalsweise</td></tr>
+<tr><td><b>C</b> Einkaufsbelege</td><td>Bestellungen + Wareneingänge mit Datum</td><td>Echte Lieferzeit je Lieferant (μ<sub>L</sub>, σ<sub>L</sub>)</td><td>FAKT → Auswertungen → Beleganalyse → Belegjournal</td><td>monatlich</td></tr>
+<tr><td><b>D</b> Rückstandsliste</td><td>Offene, nicht lieferbare Auftragsmengen</td><td>Fehlmengen erkennen (echte Nachfrage &gt; Verkäufe)</td><td>FAKT → Auswertungen → Beleganalyse → Rückstandsliste → Tabelle</td><td><b>jeden Freitag</b></td></tr>
+<tr><td><b>E</b> Artikeljournal</td><td>Alle Lagerbuchungen ab 2023</td><td>Lagerstände rückrechnen, Out-of-Stock-Tage</td><td>FAKT → Auswertungen → Artikeljournal</td><td>einmalig</td></tr>
+</table>
+<div class="box"><strong>Exportregeln:</strong> Ausgabe immer als „Tabelle“ (Excel/CSV), mit Spaltenüberschriften, ohne Zwischensummen. Zeitraum einheitlich ab 01.01.2023. Dateiname: <code>THEMA_JJJJMMTT.xlsx</code>. Keine echten Exportdateien in öffentliche Ablagen (GitHub) legen!</div>
+
+<h2>Dazu drei Werte, die nicht aus der WinLine kommen</h2>
+<table>
+<tr><th>Parameter</th><th>Startwert</th><th>Festgelegt durch</th></tr>
+<tr><td>Lagerkostensatz (Zinsen, Platz, Risiko, Versicherung)</td><td>20 % p.a.</td><td>GF/Controlling</td></tr>
+<tr><td>Bestellkosten je Bestellvorgang</td><td>50 €</td><td>Einkauf (Schätzung)</td></tr>
+<tr><td>Ziel-Servicelevel A / B / C</td><td>98 % / 95 % / 90 %</td><td>GF</td></tr>
+</table>
+
+<h2>Und so wird ausgewertet (Kurzfassung)</h2>
+<table>
+<tr><th>Schritt</th><th>Was passiert</th><th>Ergebnis</th></tr>
+<tr><td>Nachfrage</td><td>Monatsmengen je Artikel → Durchschnitt μ und Schwankung σ (Sonderbau ausgenommen)</td><td>Wie viel geht normal weg, wie stark schwankt es</td></tr>
+<tr><td>Klassifizierung</td><td>ABC nach Umsatz (80/15/5) · XYZ nach Planbarkeit (CV = σ/μ)</td><td>Wo lohnt sich Aufmerksamkeit (A) – was ist kaum planbar (Z)</td></tr>
+<tr><td>Sicherheitsbestand</td><td>SB = z × σ × √L (z aus Servicelevel, L = Lieferzeit)</td><td>Puffer gegen Schwankungen</td></tr>
+<tr><td>Meldebestand</td><td>MB = μ × L + SB</td><td><b>Wann bestellen</b> (Ampel 🔴 wenn Bestand darunter)</td></tr>
+<tr><td>Bestellmenge</td><td>EOQ = √(2·D·S/H), gerundet auf MOQ/VPE</td><td><b>Wie viel bestellen</b></td></tr>
+</table>
+
+<h2>Zum Ausprobieren</h2>
+<p>Startseite <code>index.html</code> öffnen → <strong>Rechner</strong> starten → Verkaufsstatistik-CSV und Artikelstamm-XLS hineinziehen → „Berechnen“. Alle Daten bleiben dabei lokal im Browser. Hintergründe und Formeln mit Beispielen: <strong>Workbook</strong>. Tägliche Abläufe und Zuständigkeiten: <strong>Handbuch Einkauf &amp; Innendienst</strong>.</p>
+
+<div class="fuss">
+  <span>Stölner GesmbH · Leitfaden Datenbedarf WinLine · Version 1.0</span>
+  <span>high five</span>
+</div>
+
+</body>
+</html>

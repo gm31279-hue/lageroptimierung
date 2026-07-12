@@ -10,10 +10,10 @@
   .wrap { max-width:1280px; margin:0 auto; }
   h1 { font-size:22px; margin:0 0 2px; }
   .sub { color:#667; font-size:13px; margin-bottom:16px; }
-  h2 { font-size:15px; color:#2c5f8a; margin:0 0 10px; }
+  h2 { font-size:15px; color:#E5007D; margin:0 0 10px; }
   .panel { background:#fff; border-radius:8px; padding:14px 18px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px; }
-  .step { display:inline-block; background:#2c5f8a; color:#fff; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:13px; margin-right:6px; }
-  .drop { border:2px dashed #2c5f8a; border-radius:8px; background:#f7fafd; padding:14px; text-align:center; color:#2c5f8a; cursor:pointer; font-size:13.5px; }
+  .step { display:inline-block; background:#E5007D; color:#fff; border-radius:50%; width:22px; height:22px; text-align:center; line-height:22px; font-size:13px; margin-right:6px; }
+  .drop { border:2px dashed #E5007D; border-radius:8px; background:#f7fafd; padding:14px; text-align:center; color:#E5007D; cursor:pointer; font-size:13.5px; }
   .drop.over { background:#e2eefa; }
   .drop.ok { border-color:#3a9d5d; color:#2e7d49; background:#eef8f1; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
@@ -21,20 +21,20 @@
   label { font-size:12.5px; color:#445; display:block; margin-bottom:2px; }
   input[type=number], select, input[type=text] { padding:5px 8px; border:1px solid #ccd; border-radius:5px; width:100%; font-size:13px; background:#fff; }
   .params { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
-  button { background:#2c5f8a; color:#fff; border:0; padding:9px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
+  button { background:#E5007D; color:#fff; border:0; padding:9px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
   button.sec { background:#5c7a94; font-size:12.5px; padding:7px 12px; }
   button:disabled { background:#aab6c0; cursor:not-allowed; }
   .cards { display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 12px; }
   .card { background:#fff; border-radius:8px; padding:9px 15px; box-shadow:0 1px 3px rgba(0,0,0,.08); min-width:130px; }
-  .card .v { font-size:18px; font-weight:600; color:#2c5f8a; }
+  .card .v { font-size:18px; font-weight:600; color:#E5007D; }
   .card .l { font-size:11.5px; color:#667; }
   table { border-collapse:collapse; width:100%; font-size:12px; }
   th,td { border:1px solid #d5dee7; padding:3px 7px; text-align:left; white-space:nowrap; }
-  th { background:#2c5f8a; color:#fff; position:sticky; top:0; cursor:pointer; }
+  th { background:#E5007D; color:#fff; position:sticky; top:0; cursor:pointer; }
   td.num,th.num { text-align:right; }
   tr:nth-child(even) td { background:#f4f7fa; }
   .badge { display:inline-block; padding:0 6px; border-radius:8px; font-size:11px; font-weight:600; color:#fff; }
-  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#2c5f8a}.Y{background:#7a6fbd}.Z{background:#c95555}
+  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#E5007D}.Y{background:#7a6fbd}.Z{background:#c95555}
   .tblbox { max-height:560px; overflow:auto; border:1px solid #d5dee7; }
   .rot td { background:#fdecec !important; }
   .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:8px; font-size:13px; }
@@ -45,7 +45,7 @@
 </head>
 <body>
 <div class="wrap">
-<h1>Lageroptimierung – Rechner</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:4px solid #E5007D;padding-bottom:8px;margin-bottom:8px"><h1 style="margin:0">Lageroptimierung – Rechner</h1><img src="logo.png" onerror="this.onerror=null;this.src='https://www.stoelner.at/themes/stoelner-2021/build/pix/logo1.png'" alt="Stölner" style="height:52px"></div>
 <div class="sub">Importiert die WinLine-Exporte und berechnet ABC/XYZ, Sicherheitsbestand, Meldebestand und Bestellmenge je Artikel. Läuft komplett lokal im Browser – keine Daten werden hochgeladen. Formeln wie im Workbook.</div>
 
 <div class="grid">

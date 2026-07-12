@@ -10,25 +10,25 @@
   .wrap { max-width:1200px; margin:0 auto; }
   h1 { font-size:22px; margin:0 0 4px; }
   .sub { color:#667; font-size:13px; margin-bottom:18px; }
-  #drop { border:2px dashed #2c5f8a; border-radius:10px; background:#fff; padding:40px; text-align:center; color:#2c5f8a; cursor:pointer; font-size:15px; }
+  #drop { border:2px dashed #E5007D; border-radius:10px; background:#fff; padding:40px; text-align:center; color:#E5007D; cursor:pointer; font-size:15px; }
   #drop.over { background:#e8f1fa; }
   .cards { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }
   .card { background:#fff; border-radius:8px; padding:12px 18px; box-shadow:0 1px 3px rgba(0,0,0,.08); min-width:150px; }
-  .card .v { font-size:20px; font-weight:600; color:#2c5f8a; }
+  .card .v { font-size:20px; font-weight:600; color:#E5007D; }
   .card .l { font-size:12px; color:#667; }
   .panel { background:#fff; border-radius:8px; padding:16px 20px; box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:18px; }
-  h2 { font-size:16px; color:#2c5f8a; margin:0 0 10px; }
+  h2 { font-size:16px; color:#E5007D; margin:0 0 10px; }
   table { border-collapse:collapse; width:100%; font-size:12.5px; }
   th,td { border:1px solid #d5dee7; padding:4px 8px; text-align:left; }
-  th { background:#2c5f8a; color:#fff; position:sticky; top:0; }
+  th { background:#E5007D; color:#fff; position:sticky; top:0; }
   td.num, th.num { text-align:right; }
   tr:nth-child(even) td { background:#f4f7fa; }
   .badge { display:inline-block; padding:1px 7px; border-radius:9px; font-size:11px; font-weight:600; color:#fff; }
-  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#2c5f8a}.Y{background:#7a6fbd}.Z{background:#c95555}
+  .A{background:#3a9d5d}.B{background:#d9a02b}.C{background:#98a2ad}.X{background:#E5007D}.Y{background:#7a6fbd}.Z{background:#c95555}
   .matrix td { text-align:center; }
-  .interp { background:#eef4fa; border-left:4px solid #2c5f8a; padding:10px 14px; font-size:13.5px; }
+  .interp { background:#fdeef6; border-left:4px solid #E5007D; padding:10px 14px; font-size:13.5px; }
   input[type=text] { padding:6px 10px; border:1px solid #ccd; border-radius:5px; width:280px; margin-bottom:8px; }
-  button { background:#2c5f8a; color:#fff; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+  button { background:#E5007D; color:#fff; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media(max-width:900px){ .grid2{grid-template-columns:1fr} }
   #results { display:none; }
@@ -37,7 +37,7 @@
 </head>
 <body>
 <div class="wrap">
-<h1>Nachfrageanalyse für die Lageroptimierung</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:4px solid #E5007D;padding-bottom:8px;margin-bottom:8px"><h1 style="margin:0">Nachfrageanalyse für die Lageroptimierung</h1><img src="logo.png" onerror="this.onerror=null;this.src='https://www.stoelner.at/themes/stoelner-2021/build/pix/logo1.png'" alt="Stölner" style="height:52px"></div>
 <div class="sub">Wertet die WinLine-Verkaufsstatistik aus (z. B. <b>VKST23-26.csv</b>): ABC/XYZ, Nachfrageverteilung (μ, σ), Kanaltrennung. Alles läuft lokal im Browser – es werden keine Daten hochgeladen.</div>
 
 <div id="drop">📂 <b>VKST-CSV hier hineinziehen</b> oder klicken zum Auswählen
@@ -174,11 +174,11 @@ function render(g){
     const N=Math.min(SKUS.length,300); let c=0;
     const pd=SKUS.slice(0,N).map(s=>{c+=s.ums; return c/g.totU*100;});
     new Chart(document.getElementById('pareto'),{type:'line',data:{labels:pd.map((_,i)=>i+1),
-      datasets:[{label:'Kumulierter Umsatzanteil %',data:pd,borderColor:'#2c5f8a',pointRadius:0,fill:true,backgroundColor:'rgba(44,95,138,.12)'}]},
+      datasets:[{label:'Kumulierter Umsatzanteil %',data:pd,borderColor:'#E5007D',pointRadius:0,fill:true,backgroundColor:'rgba(229,0,125,.10)'}]},
       options:{scales:{y:{max:100,ticks:{callback:v=>v+' %'}},x:{title:{display:true,text:'Artikel (nach Umsatz sortiert)'}}},plugins:{legend:{display:false}}}});
     const ce=Object.entries(g.chan).sort((a,b)=>b[1]-a[1]);
     new Chart(document.getElementById('chan'),{type:'bar',data:{labels:ce.map(e=>e[0]),
-      datasets:[{data:ce.map(e=>e[1]),backgroundColor:'#2c5f8a'}]},
+      datasets:[{data:ce.map(e=>e[1]),backgroundColor:'#E5007D'}]},
       options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v/1000)+' k€'}}}}});
   }catch(e){ console.warn('Charts:',e); }
 

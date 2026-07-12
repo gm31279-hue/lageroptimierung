@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Handbuch Bestandsmanagement – Einkauf & Innendienst | Stölner</title>
+<style>
+  :root {
+    --ci-magenta: #E5007D;   /* Stölner Magenta */
+    --ci-grau: #575756;      /* Stölner Anthrazit */
+    --ci-hellgrau: #f2f2f2;
+    --ci-linie: #d9d9d9;
+  }
+  * { box-sizing: border-box; }
+  body { font-family:'Segoe UI',Calibri,Arial,sans-serif; color:var(--ci-grau); max-width:880px; margin:0 auto; padding:0 30px 50px; line-height:1.6; }
+  .kopf { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:26px 0 14px; border-bottom:5px solid var(--ci-magenta); }
+  .kopf img { height:86px; }
+  .kopf .titel h1 { margin:0; font-size:25px; color:var(--ci-grau); }
+  .kopf .titel .unter { color:var(--ci-magenta); font-weight:600; font-size:14px; letter-spacing:.5px; }
+  .meta { color:#8a8a8a; font-size:12.5px; margin:10px 0 26px; }
+  h2 { font-size:19px; color:var(--ci-magenta); margin-top:38px; padding-bottom:4px; border-bottom:1px solid var(--ci-linie); }
+  h3 { font-size:14.5px; color:var(--ci-grau); margin-top:20px; }
+  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:13.5px; }
+  th,td { border:1px solid var(--ci-linie); padding:6px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--ci-grau); color:#fff; }
+  tr:nth-child(even) td { background:var(--ci-hellgrau); }
+  .box { background:#fdeef6; border-left:4px solid var(--ci-magenta); padding:10px 14px; margin:14px 0; font-size:13.5px; }
+  .grau { background:var(--ci-hellgrau); border-left:4px solid var(--ci-grau); padding:10px 14px; margin:14px 0; font-size:13.5px; }
+  .formel { background:#fafafa; border:1px solid var(--ci-linie); border-radius:6px; padding:8px 16px; margin:10px 0; text-align:center; font-size:14.5px; }
+  ol li, ul li { margin-bottom:6px; }
+  code { background:var(--ci-hellgrau); padding:1px 5px; border-radius:3px; font-size:13px; }
+  .fuss { margin-top:46px; border-top:5px solid var(--ci-magenta); padding-top:10px; font-size:12px; color:#8a8a8a; display:flex; justify-content:space-between; }
+  .nummer { display:inline-block; background:var(--ci-magenta); color:#fff; border-radius:50%; width:24px; height:24px; text-align:center; line-height:24px; font-size:13px; margin-right:8px; font-weight:600; }
+  @media print { body{padding:0 0 20px} .kopf img{height:70px} }
+</style>
+</head>
+<body>
+
+<div class="kopf">
+  <div class="titel">
+    <h1>Handbuch Bestandsmanagement &amp; Bestellwesen</h1>
+    <div class="unter">EINKAUF &amp; INNENDIENST · LAGEROPTIMIERUNG</div>
+  </div>
+  <img src="logo.png" onerror="this.src='https://www.stoelner.at/themes/stoelner-2021/build/pix/logo1.png'" alt="Stölner – high five">
+</div>
+<div class="meta">Stölner GesmbH · Version 1.0 · Stand 10.07.2026 · Verantwortlich: Günther Maurer</div>
+
+<h2>1. Wozu dieses Handbuch?</h2>
+<p>Wir steuern unsere Lagerbestände ab sofort nach Zahlen statt nach Bauchgefühl. Das Ziel: <strong>lieferfähig bleiben, ohne unnötig Kapital im Lager zu binden.</strong> Dieses Handbuch beschreibt, wer wann was zu tun hat – von den WinLine-Exporten bis zur ausgelösten Bestellung. Es gilt für alle Lagerartikel; kundenspezifischer Sonderbau (z.&nbsp;B. „Niro – …“, „Studio – …“) wird weiterhin auftragsbezogen beschafft und ist ausgenommen.</p>
+<div class="grau"><strong>Grundprinzip:</strong> Für jeden Lagerartikel gibt es einen <strong>Meldebestand</strong> (wann bestellen?) und eine <strong>Bestellmenge</strong> (wie viel bestellen?). Beide berechnet der Stölner-Lageroptimierungs-Rechner automatisch. Die Aufgabe von Einkauf und Innendienst ist, die Routinen einzuhalten und die rote Liste abzuarbeiten.</div>
+
+<h2>2. Zuständigkeiten &amp; Rhythmen</h2>
+<table>
+<tr><th>Aufgabe</th><th>Rhythmus</th><th>Zuständig</th><th>Vertretung</th></tr>
+<tr><td>Rückstandsliste exportieren &amp; ablegen</td><td>jeden <strong>Freitag</strong></td><td>____________</td><td>____________</td></tr>
+<tr><td>Bestellvorschlagsliste durchsehen, Bestellungen auslösen</td><td>jeden <strong>Freitag</strong></td><td>____________</td><td>____________</td></tr>
+<tr><td>Verkaufsstatistik exportieren, Rechner aktualisieren</td><td>Monatsanfang</td><td>____________</td><td>____________</td></tr>
+<tr><td>Einkaufsbelege exportieren (Lieferzeiten)</td><td>Monatsanfang</td><td>____________</td><td>____________</td></tr>
+<tr><td>Artikelstammliste exportieren, MOQ/VPE/Preise prüfen</td><td>Quartalsanfang</td><td>____________</td><td>____________</td></tr>
+<tr><td>Parameter freigeben (Servicelevel, Kostensätze)</td><td>jährlich</td><td>Geschäftsführung</td><td>–</td></tr>
+</table>
+
+<h2>3. Unsere Werkzeuge</h2>
+<table>
+<tr><th>Werkzeug</th><th>Zweck</th><th>Wo</th></tr>
+<tr><td><strong>Lageroptimierung_Rechner.html</strong></td><td>Berechnet Meldebestand, Bestellmenge, Ampel</td><td>Desktop-Verknüpfung „Lageroptimierung“ / GitHub-Repo</td></tr>
+<tr><td>Lageroptimierung_Analyse_Tool.html</td><td>Nachfrageanalyse (ABC/XYZ, Pareto, Kanäle)</td><td>ebenda</td></tr>
+<tr><td>Workbook Datenauswertung</td><td>Erklärt alle Formeln &amp; Hintergründe (Schulung)</td><td>ebenda</td></tr>
+<tr><td>WinLine-Exportanleitung</td><td>Klickanleitung für alle Exporte A–E</td><td>ebenda</td></tr>
+</table>
+
+<h2>4. Die Wochenroutine (Freitag, ca. 20 Minuten)</h2>
+<ol>
+<li><span class="nummer">1</span><strong>Rückstandsliste exportieren:</strong> WinLine FAKT → Auswertungen → Beleganalyse → Rückstandsliste → Ausgabe „Tabelle“ → speichern als <code>RUECKSTAND_JJJJMMTT.xlsx</code> im Ablageordner.</li>
+<li><span class="nummer">2</span><strong>Rechner öffnen</strong> (Desktop-Verknüpfung) → aktuelle Verkaufsstatistik und Artikelstammliste hineinziehen → „Berechnen“.</li>
+<li><span class="nummer">3</span><strong>Filter „nur 🔴 unter Meldebestand“ aktivieren.</strong> Das ist die Arbeitsliste.</li>
+<li><span class="nummer">4</span><strong>Je roten Artikel prüfen:</strong> Ist schon eine Bestellung beim Lieferanten offen? (WinLine: offene Bestellungen) → wenn ja, abhaken. Wenn nein → weiter.</li>
+<li><span class="nummer">5</span><strong>Bestellung in WinLine anlegen</strong> mit der vorgeschlagenen Bestellmenge (bereits auf Mindestbestellmenge und Verpackungseinheit gerundet).</li>
+<li><span class="nummer">6</span><strong>Abweichungen vermerken:</strong> Wird bewusst mehr/weniger oder gar nicht bestellt (Aktion, Saisonende, bekanntes Projekt), kurz im Bestellkommentar begründen.</li>
+<li><span class="nummer">7</span><strong>CSV-Export</strong> der Bestellvorschlagsliste im Ablageordner sichern (Nachvollziehbarkeit).</li>
+</ol>
+<div class="box"><strong>Hausverstand schlägt Ampel:</strong> Die Liste ist ein Vorschlag, kein Automat. Bekannte Großprojekte, Aktionen oder Saisonstarts dürfen und sollen übersteuert werden – aber immer mit kurzem Vermerk, damit wir daraus lernen.</div>
+
+<h2>5. Die Monatsroutine (1. Arbeitswoche des Monats)</h2>
+<ol>
+<li>Verkaufsstatistik in WinLine aktualisieren (gleiche Einstellungen wie immer, Zeitraum ab 01.01.2023) → Export als CSV.</li>
+<li>Einkaufs-Belegjournal exportieren (Bestellungen + Wareneingänge des Vormonats) → <code>EK_BELEGE_JJJJMM.xlsx</code>.</li>
+<li>Beide Dateien in den Ablageordner legen; die neue VKST-Datei ist ab jetzt die Basis für die Wochenroutine.</li>
+<li>Kurzer Blick auf die Kennzahlen im Rechner: Hat sich die Zahl der 🔴-Artikel deutlich verändert? Auffälligkeiten an den Einkauf/GF melden.</li>
+</ol>
+
+<h2>6. Die Quartalsroutine</h2>
+<ol>
+<li>Artikelstammliste über den List-Assistenten exportieren (Liste „ARTSTAMM Einstandspreise MOQ VPE“).</li>
+<li>Stichprobe Datenqualität: Sind Losgröße (MOQ), Colli (VPE) und Beschaffungszeitraum bei den A-Artikeln gepflegt? Lücken an den Einkauf zur Nachpflege.</li>
+<li>ABC/XYZ-Klassen im Rechner neu ansehen: Auf- und Absteiger prüfen (neuer Schnelldreher? Ladenhüter?).</li>
+<li>Auslaufartikel und Ladenhüter (C/Z mit Bestand) an die GF melden → Abverkaufsaktion oder Sortimentsbereinigung.</li>
+</ol>
+
+<h2>7. Bestellregeln</h2>
+<table>
+<tr><th>Klasse</th><th>Regel</th></tr>
+<tr><td><strong>AX / AY</strong></td><td>Strikt nach Meldebestand und vorgeschlagener Menge bestellen. Höchste Priorität – hier kostet jede Fehlmenge Umsatz.</td></tr>
+<tr><td><strong>AZ</strong></td><td>Umsatzstark, aber unregelmäßig: Vorschlag prüfen, im Zweifel Rücksprache Einkauf/GF. Kein blindes Auffüllen.</td></tr>
+<tr><td><strong>B (alle)</strong></td><td>Nach Vorschlag bestellen, Sammelbestellungen je Lieferant bündeln.</td></tr>
+<tr><td><strong>CX / CY</strong></td><td>Seltener, dafür größer bestellen (Vorschlag folgt dem automatisch über die EOQ).</td></tr>
+<tr><td><strong>CZ</strong></td><td>Grundsätzlich kein Lagerbestand – nur auf Kundenauftrag beschaffen.</td></tr>
+<tr><td>Sonderbau</td><td>Immer auftragsbezogen, nie auf Lager.</td></tr>
+</table>
+<p>Bestellmenge = Vorschlag aus dem Rechner (EOQ, aufgerundet auf MOQ/VPE). Nie unter der Mindestbestellmenge des Lieferanten bestellen; Anbruch von Verpackungseinheiten vermeiden.</p>
+
+<h2>8. Sonderfälle – was tun, wenn …</h2>
+<table>
+<tr><th>Situation</th><th>Vorgehen</th></tr>
+<tr><td>Neuer Artikel ohne Verkaufshistorie</td><td>Startbestand mit Einkauf/Vertrieb schätzen (vergleichbarer Artikel als Referenz); nach 3 Monaten liefert der Rechner erste Werte.</td></tr>
+<tr><td>Artikel akut nicht lieferbar, Kunde wartet</td><td>Lieferant nach Expresslieferung fragen; Alternativartikel prüfen; Kunde über Innendienst aktiv informieren. Fall bleibt über die Rückstandsliste dokumentiert.</td></tr>
+<tr><td>Lieferant liefert wiederholt zu spät</td><td>Im Monatsexport sichtbar (Lieferzeit-Auswertung). An Einkauf melden → Lieferzeit im Artikelstamm anpassen oder Zweitlieferant.</td></tr>
+<tr><td>Rückstand mit Liefertermin weit in der Vergangenheit</td><td>Klären: liefern, stornieren oder Gutschrift. Nicht liegen lassen – Altfälle verfälschen die Auswertung.</td></tr>
+<tr><td>Ampel wirkt unplausibel</td><td>Prüfen: aktuelle Dateien geladen? Spaltenzuordnung korrekt? Im Zweifel an Günther Maurer melden.</td></tr>
+</table>
+
+<h2>9. Aktuelle Parameter</h2>
+<table>
+<tr><th>Parameter</th><th>Wert</th><th>Änderung nur durch</th></tr>
+<tr><td>Lagerkostensatz</td><td>20 % p.a.</td><td>GF/Controlling</td></tr>
+<tr><td>Bestellkosten</td><td>50 € je Bestellung</td><td>GF/Controlling</td></tr>
+<tr><td>Servicelevel A / B / C</td><td>98 % / 95 % / 90 %</td><td>GF</td></tr>
+<tr><td>Standard-Lieferzeit (wenn nicht gepflegt)</td><td>21 Tage</td><td>Einkauf</td></tr>
+</table>
+
+<h2>10. Formel-Kurzreferenz</h2>
+<div class="formel">Meldebestand = μ × L + z × σ × √L &nbsp;&nbsp;·&nbsp;&nbsp; Bestellmenge (EOQ) = √( 2 × Jahresbedarf × Bestellkosten ÷ (EP × 20 %) )</div>
+<p style="font-size:13px">μ = Ø Monatsnachfrage · σ = Schwankung der Monatsnachfrage · L = Lieferzeit in Monaten · z = Servicefaktor (98&nbsp;% → 2,05 · 95&nbsp;% → 1,65 · 90&nbsp;% → 1,28) · EP = Einstandspreis. Details, Beispiele und Übungen: siehe Workbook.</p>
+
+<div class="fuss">
+  <span>Stölner GesmbH · Handbuch Bestandsmanagement · Version 1.0</span>
+  <span>high five – gemeinsam lieferfähig</span>
+</div>
+
+</body>
+</html>
