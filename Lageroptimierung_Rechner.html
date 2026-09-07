@@ -142,7 +142,7 @@ function decodeBuf(buf){ let t=new TextDecoder('windows-1252').decode(buf);
 function readAny(file, cb){
   const status=m=>{ if(window._st) window._st.innerHTML=m; };
   const rd=new FileReader();
-  rd.onerror=()=>alert('Datei konnte nicht gelesen werden.');
+  rd.onerror=()=>status('&#10060; Datei konnte nicht gelesen werden. <b>H\u00e4ufigste Ursache:</b> Die Datei wurde direkt aus einem ZIP-Fenster gezogen. Bitte das ZIP zuerst entpacken (Rechtsklick \u2192 \u201eAlle extrahieren\u2026\u201c) und dann die entpackte Datei hineinziehen.');
   rd.onload=async()=>{ try{
     if(/\.xlsx?$/i.test(file.name)){
       if(typeof XLSX==='undefined'){ status('&#10060; Excel-Bibliothek nicht geladen (Internet/Firewall?). Bitte die Datei als <b>CSV</b> exportieren und erneut hineinziehen.'); return; }
