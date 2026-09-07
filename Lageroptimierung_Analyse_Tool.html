@@ -232,6 +232,7 @@ function loadFile(f){
   if(!f)return;
   drop.innerHTML='⏳ Analysiere '+f.name+' …';
   const rd=new FileReader();
+  rd.onerror=()=>{ drop.innerHTML='&#10060; Datei konnte nicht gelesen werden. <b>H\u00e4ufigste Ursache:</b> Datei direkt aus einem ZIP-Fenster gezogen \u2013 ZIP zuerst entpacken (Rechtsklick \u2192 \u201eAlle extrahieren\u2026\u201c).'; };
   rd.onload=async()=>{
     let text=new TextDecoder('windows-1252').decode(rd.result);
     if(/\u00c3[\u00a4\u00b6\u00bc\u0178\u201e\u2013\u0153]/.test(text)) text=new TextDecoder('utf-8').decode(rd.result);
